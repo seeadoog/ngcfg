@@ -1,0 +1,16 @@
+*.idea
+*.iml
+*.class
+*.log
+*.jar
+*.DS_Store
+*.exe
+trace
+debug
+example
+findercache
+findercache/*
+.vscode
+*.findercache
+.idea
+
