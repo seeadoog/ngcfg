@@ -1,6 +1,9 @@
 package ngcfg
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+)
 
 // 有序map
 type MapElem struct {
@@ -109,3 +112,63 @@ type Iterator interface {
 	HasNext()bool
 	Next()*MapElem
 }
+
+func (m *LinkedMap)MarshalJSON()([]byte,error){
+	it:=m.Iterator()
+	bf:=bytes.Buffer{}
+	bf.WriteString("{")
+	for it.HasNext(){
+		e:=it.Next()
+		b,err:=json.Marshal(e.Val)
+		if err != nil{
+			return nil,err
+		}
+		bf.WriteString("\"")
+		bf.WriteString(e.Key)
+		bf.WriteString("\":")
+		bf.Write(b)
+		bf.WriteByte(',')
+		//bf.WriteString(fmt.Sprintf("\"%s\":%s,",e.Key,string(b)))
+	}
+	b:=bf.Bytes()
+	if len(b)>1{
+		b[len(b)-1] = '}'
+	}else{
+		b = append(b,'}')
+	}
+	return b,nil
+}
+
+const (
+	statusBegin = iota
+	stautsInKeyStr
+	statusValueBeginPre
+)
+//{"aa":{"cc":"dd"}}
+//func(m *LinkedMap)UnmarshalJSON(b []byte)error{
+//	json.Unmarshal()
+//	status:=statusBegin
+//	for _, c := range b {
+//		key:=make([]byte,0,2)
+//		switch status {
+//		case statusBegin:
+//			switch c {
+//			case '"':
+//				status = stautsInKeyStr
+//
+//			}
+//		case stautsInKeyStr:
+//			if c == '"' {
+//				status = statusValueBeginPre
+//				continue
+//			}
+//			key = append(key, c)
+//		case statusValueBeginPre:
+//			if c==':'{
+//
+//			}
+//		}
+//
+//
+//	}
+//}
