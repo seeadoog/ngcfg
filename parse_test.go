@@ -139,6 +139,7 @@ type NginxServer struct {
 	E Elem `json:"e"`
 	Cmds []string `json:"cmds"`
 	Schema string `json:"schema"`
+	Ids []int `json:"ids"`
 }
 
 func TestDemo(t *testing.T){
@@ -213,8 +214,17 @@ schema '
 	"properties":""
 }'
 
-
-
+cmds{
+	- aaa
+	- bbb
+	- 'gggg 滚滚滚'
+	- 'ls -lh as a '
+	
+}
+ids{
+	- 1 2 3
+	- 4 5 6
+}
 
 `
 	if err:=UnmarshalFromBytes([]byte(cfg),c);err != nil{

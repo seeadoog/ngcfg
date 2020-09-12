@@ -82,7 +82,17 @@ func setObject(e *Elem, val reflect.Value) error {
 
 				arr, ok := vfe.([]string)
 				if !ok {
-					return fmt.Errorf("%s is object type, want:[]string", tag)
+					e,ok:=vfe.(*Elem)
+					if ok{
+						a,err:=e.AsArray()
+						if err != nil{
+							return fmt.Errorf("%s is object type, want:[]string:%w", tag,err)
+						}
+						arr = a
+					}else{
+						return fmt.Errorf("%s is object type, want:[]string", tag)
+					}
+
 				}
 				if err := setVal(arr, fv); err != nil {
 					return err

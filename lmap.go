@@ -97,6 +97,8 @@ func (m *LinkedMap) HasNext() bool {
 	 return true
 }
 
+
+
 func (m *LinkedMap) Next() *MapElem {
 	v:=m.iterNode
 	m.iterNode = m.iterNode.next

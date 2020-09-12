@@ -3,6 +3,7 @@ package ngcfg
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -33,8 +34,6 @@ func (e *Elem)Set(k string,v interface{})error{
 		return nil
 	}
 	e.data.Set(k,v)
-
-
 	return nil
 }
 
@@ -168,6 +167,20 @@ func (e *Elem)GetElem(key string)(*Elem,error){
 	return nil,fmt.Errorf("type of %s is not elem",key)
 }
 
+func (e *Elem)AsArray()([]string,error){
+	it:=e.Iterator()
+	res:=make([]string,0)
+	for it.HasNext(){
+		elem:=it.Next()
+		switch elem.Val.(type) {
+		case []string:
+			res = append(res,elem.Val.([]string)...)
+		default:
+			return nil,fmt.Errorf("type is not array:%s",reflect.TypeOf(elem.Val).String())
+		}
+	}
+	return res,nil
+}
 
 
 func boolOf(s string)(bool,error){
