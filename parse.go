@@ -35,6 +35,7 @@ func (s *scanner)setLine(){
 
 
 func parse(b []byte)(*Elem,error){
+	b = append(b,'\n')  // 结尾加一个\n
 	sc:=&scanner{
 		stack: list.New(),
 		tk:    make([]byte,0,5),
@@ -89,7 +90,14 @@ func stepBegin(s *scanner,c byte)error{
 		s.step = stepInstring
 		s.cvt = valueLine
 		return nil
-
+	case '\'':
+		s.step = stepInstring2
+		s.cvt = valueLine
+		return nil
+	case '`':
+		s.step = stepInstring3
+		s.cvt = valueLine
+		return nil
 	}
 	s.cvt = valueLine
 	s.tk = append(s.tk,c)
@@ -125,6 +133,7 @@ func appendLine(s *scanner){
 		s.tk = s.tk[:0]
 	}
 }
+
 //weewr{
 func stepContinue(s *scanner,c byte)error{
 	switch c {
@@ -144,13 +153,22 @@ func stepContinue(s *scanner,c byte)error{
 		e:=NewElem()
 		tope:=s.stack.Back().Value.(*Elem)
 		appendLine(s)
-		if len(s.ltks)!=1{
-			return fmt.Errorf("invalid begin value of '{',line:%d,rank:%d",s.line,s.rank)
+		if len(s.ltks)>2 || len(s.ltks)==0{
+			return fmt.Errorf("invalid begin value of '{',keys too much or less,at line:%d,rank:%d",s.line,s.rank)
 		}
-		key:= s.ltks[0]
-		if err:=tope.Set(key,e);err != nil{
-			return err
+		if len(s.ltks)==1{
+			key:= s.ltks[0]
+			if err:=tope.Set(key,e);err != nil{
+				return err
+			}
+		}else{
+			key:=s.ltks[0]
+			subKey := s.ltks[1]
+			if err:=tope.SetSub(key,subKey,e);err != nil{
+				return err
+			}
 		}
+
 		s.stack.PushBack(e)
 		s.ltks = []string{}
 		s.step = stepStartObject
@@ -165,6 +183,9 @@ func stepContinue(s *scanner,c byte)error{
 	case '\'':
 		s.step = stepInstring2
 		return nil
+	case '`':
+		s.step = stepInstring3
+		return nil
 	}
 	if isSpace(c){
 		if len(s.tk) >0{
@@ -177,6 +198,7 @@ func stepContinue(s *scanner,c byte)error{
 	s.step = stepContinue
 	return nil
 }
+
 //" " 类型的string
 func stepInstring(s *scanner,c byte)error{
 	if c == '\n'{
@@ -212,6 +234,18 @@ func stepInstring2(s *scanner,c byte)error{
 	return nil
 }
 
+func stepInstring3(s *scanner,c byte)error{
+	if c == '\n'{
+		s.setLine()
+	}
+	if c == '`'{
+		s.step =stepContinue
+		return nil
+	}
+	s.tk = append(s.tk,c)
+	return nil
+}
+
 func stepEcpNext(s *scanner,c byte)error{
 	s.tk = append(s.tk,c)
 	s.step =stepInstring
@@ -222,6 +256,8 @@ func stepEcpNext2(s *scanner,c byte)error{
 	s.step =stepInstring2
 	return nil
 }
+
+
 
 //忽略当前换行符，应对配置行过长的情况
 func stepEcpSep(s *scanner,c byte)error{
@@ -235,6 +271,7 @@ func stepEcpSep(s *scanner,c byte)error{
 			s.step = stepContinue
 		}
 		return nil
+
 	default:
 		//if err:=stepContinue(s,c);err !=nil{
 		//	return err

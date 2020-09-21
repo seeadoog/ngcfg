@@ -10,12 +10,15 @@ func Parse(data []byte) (*Elem, error) {
 	return parse(data)
 }
 
+
+
+
 func Unmarshal(e *Elem, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val)
+	return setObject(e, val,false)
 }
 
 func UnmarshalFromBytes(data []byte, v interface{}) error {
@@ -26,7 +29,24 @@ func UnmarshalFromBytes(data []byte, v interface{}) error {
 	return Unmarshal(e, v)
 }
 
-func setObject(e *Elem, val reflect.Value) error {
+func UnmarshalCtx(e *Elem, v interface{}) error {
+	val := reflect.ValueOf(v)
+	if val.Kind() != reflect.Ptr {
+		panic("value must be pointer")
+	}
+	return setObject(e, val,true)
+}
+
+func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
+	e, err := Parse(data)
+	if err != nil {
+		return err
+	}
+	return UnmarshalCtx(e, v)
+}
+
+
+func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 	if val.Kind() ==reflect.Ptr{
 		if val.IsNil(){
 			vt:=val.Type()
@@ -49,7 +69,12 @@ func setObject(e *Elem, val reflect.Value) error {
 			if tag == "" {
 				tag = ft.Name
 			}
-			vfe := e.Get(tag)
+			var vfe interface{}
+			if useCtx{
+				vfe = e.GetCtx(tag)
+			}else{
+				vfe = e.Get(tag)
+			}
 			if vfe == nil {
 				continue
 			}
@@ -62,7 +87,7 @@ func setObject(e *Elem, val reflect.Value) error {
 					return fmt.Errorf("%s is not object", tag)
 				}
 
-				if err := setObject(ele, fv); err != nil {
+				if err := setObject(ele, fv,useCtx); err != nil {
 					return err
 				}
 			default:
@@ -73,7 +98,7 @@ func setObject(e *Elem, val reflect.Value) error {
 						if !ok {
 							return fmt.Errorf("%s is not object in array object", tag)
 						}
-						if err := setObject(ele, fv); err != nil {
+						if err := setObject(ele, fv,useCtx); err != nil {
 							return err
 						}
 						break
@@ -84,7 +109,7 @@ func setObject(e *Elem, val reflect.Value) error {
 				if !ok {
 					e,ok:=vfe.(*Elem)
 					if ok{
-						a,err:=e.AsArray()
+						a,err:=e.AsStringArray()
 						if err != nil{
 							return fmt.Errorf("%s is object type, want:[]string:%w", tag,err)
 						}
@@ -117,20 +142,21 @@ func setObject(e *Elem, val reflect.Value) error {
 			switch mv.(type) {
 			case *Elem:
 				mvType := tp.Elem()
-
 				if mvType.Kind() == reflect.Interface {
-					return fmt.Errorf("value type  interfce in map is not allowed while assgin elem  ")
+					return fmt.Errorf("value type  interface in map is not allowed while assgin elem  ")
 				}
+
 				var typv reflect.Value
 				if mvType.Kind() == reflect.Ptr {
 					typv = reflect.New(mvType.Elem())
 				} else {
 					typv = reflect.New(mvType)
-
 				}
-				if err := setObject(mv.(*Elem), typv); err != nil {
+
+				if err := setObject(mv.(*Elem), typv,useCtx); err != nil {
 					return err
 				}
+
 				if mvType.Kind() == reflect.Ptr {
 					val.SetMapIndex(reflect.ValueOf(mk), typv)
 				} else {
@@ -174,7 +200,7 @@ func setObject(e *Elem, val reflect.Value) error {
 					return err
 				}
 			case *Elem:
-				if err := setObject(item.Val.(*Elem), itemVal.Elem()); err != nil {
+				if err := setObject(item.Val.(*Elem), itemVal.Elem(),useCtx); err != nil {
 					return err
 				}
 			}
@@ -248,5 +274,5 @@ func setVal(val []string, v reflect.Value) error {
 		v.Set(slice)
 		return nil
 	}
-	return fmt.Errorf("unsupported type of sub value:%s", v.Kind().String())
+	return fmt.Errorf("cannot set value:%v to type:%s",val, v.Kind().String())
 }

@@ -50,7 +50,6 @@ type LinkedMap struct {
 }
 
 
-
 func (m *LinkedMap)Len()int{
 	return len(m.data)
 }

@@ -1,0 +1,61 @@
+
+worker_process 5
+
+server h1{
+    worker_process 10
+}
+
+resource{
+    redis lsa{
+        addrs 232.31.22.22
+    }
+
+    mysql dx{
+
+    }
+
+    mysql hu{
+
+    }
+
+
+}
+
+api /{
+    lua '
+
+
+    '
+
+    java_script `
+     var a = 5
+     var c =6
+
+    `
+}
+
+datas {
+    cmds `
+    ls -lh
+    cd && sh build.sh
+
+    `
+
+}
+
+map golang{
+
+   ls{
+      timeout 5
+   }
+   ls ff{
+
+   }
+
+   ls gg{
+
+   }
+
+
+}
+

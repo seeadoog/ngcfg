@@ -70,7 +70,6 @@ func Test_parse(t *testing.T) {
 	fmt.Println(handlers.GetString("auth_by_lua_block"))
 	fmt.Println(handlers.GetString("log_by_lua_block"))
 	fmt.Println(handlers.GetString("content_by_lua"))
-
 }
 
 
@@ -134,7 +133,7 @@ type NginxServer struct {
 	WorkerProcess int `json:"worker_process"`
 	Server *Server `json:"server"`
 	Upstreams []Upstream `json:"upstreams"`
-	Storage *Storage `json:"storage"`
+	Storage map[string]Redis `json:"storage"`
 	Args map[string]string `json:"args"`
 	E Elem `json:"e"`
 	Cmds []string `json:"cmds"`
@@ -158,6 +157,7 @@ server{
     "
 
 }
+
 upstreams{ # 如果upstream 模版是数组，那么server 就会被当作数组元素处理，忽略key，但是key 不能重复, 或者 key 为- 会自动生成索引id
     - {
         hosts www.test.com www.test.cn
@@ -182,6 +182,25 @@ storage{
         addr 192.33.22.22
         password 123456
 	}
+
+}
+
+storage mysql1{
+	addr 192.33.22.22
+    password 123456
+}
+
+storage redis2{
+	addr 192.33.22.22
+}
+password 12345689999
+
+server http{
+	
+}
+
+server tcp{
+
 }
 
 "cfg_json" '{"name":"string"}'
@@ -221,13 +240,26 @@ cmds{
 	- 'ls -lh as a '
 	
 }
+
+resource redis{
+	
+}
+
+resource mysql{
+
+}
+
+resource rmq{
+	
+}
+
 ids{
 	- 1 2 3
 	- 4 5 6
 }
 
 `
-	if err:=UnmarshalFromBytes([]byte(cfg),c);err != nil{
+	if err:=UnmarshalFromBytesCtx([]byte(cfg),c);err != nil{
 		panic(err)
 	}
 
@@ -244,4 +276,118 @@ ids{
 	fmt.Println(c.E.Get("abds"))
 	fmt.Println(c)
 
+}
+
+func TestParseCtx(t *testing.T){
+	cfg:=[]byte(`
+
+workers 1
+timeout 5
+server api1{
+	workers 5
+}
+
+server api2{
+	workers 10
+}
+
+api /v2/create{
+	method post
+	timeout 50
+}
+
+api /v2/delete{
+	method delete
+}
+
+
+method get 
+
+api /v2/update{
+	- ffffff
+    -  ggggg
+	- ffffff ggggg '{ws:{}}'
+}
+
+services{
+	ddd dddd
+}
+
+http{
+	ssl on
+	apiv1{
+		ssl off
+	}
+}
+
+http wjge{
+	ssl off 
+	scripts{
+		- set $.business.did $.common.did
+		- call atmos-iat
+		- rmq_set
+	}
+}
+
+kernel_config{
+	next_g.cfg {
+		spdNwwfpsc 5
+		nnslpll  5
+		gpu_id 0
+	}
+ase 
+# oh my god
+# 
+#
+}
+
+`)
+	e,err:=Parse(cfg)
+	if err != nil{
+		panic(err)
+	}
+	b,_:=json.Marshal(e)
+
+	it:=e.Iterator()
+	for it.HasNext(){
+		e:=it.Next()
+		fmt.Println(e.Key,e.Val)
+	}
+	//
+	fmt.Println(string(b))
+	s,err:=e.GetElem("server")
+	fmt.Println(err)
+	api1,_:=s.GetElem("api1")
+	fmt.Println(api1.GetCtxString("workers"))
+	fmt.Println(e.Elem("api").Elem("/v2/update").AsStringArray())
+	fmt.Println(e.Elem("http").GetBool("ssl"))
+	fmt.Println(e.Elem("http").Elem("wjge").GetCtxBool("ssl"))
+
+}
+
+
+type NginxConf struct {
+	WorkerProcess int
+	Http map[string]struct{
+
+	} `json:"http"`
+	Tcp map[string]struct{
+
+	} `json:"tcp"`
+
+}
+
+func TestFile(t *testing.T){
+	b,err:=ioutil.ReadFile(`test.cfga`)
+	if err != nil{
+		panic(err)
+	}
+	e,err:=parse(b)
+	if err != nil{
+		panic(err)
+	}
+
+	ss,_:=json.Marshal(e)
+	fmt.Println(string(ss))
+	fmt.Println(e.Elem("datas").AsArray())
 }
