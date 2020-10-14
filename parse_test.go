@@ -3,7 +3,9 @@ package ngcfg
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/valyala/fasthttp"
 	"io/ioutil"
+	"net"
 	"testing"
 )
 
@@ -27,6 +29,7 @@ server {  # server config
 			123 123
 		du "hw sdf ok thanks"
 	}
+
     handlers{
 		auth_by_lua_block "
 			if ctx.param.app_id=='4cc5779a'
@@ -48,10 +51,20 @@ server {  # server config
 				}
 			})
 		"
-		
+		lua "dsfdsf afdf afd"
 	}
-}
 
+
+
+}
+workerProcess $OS(cpuNum)
+http proxy{
+	
+}	
+
+http admin{
+	
+}
 
 `)
 func Test_parse(t *testing.T) {
@@ -320,22 +333,20 @@ http{
 	}
 }
 
-http wjge{
+http sss{
 	ssl off 
 	scripts{
-		- set $.business.did $.common.did
-		- call atmos-iat
-		- rmq_set
+	
 	}
 }
 
-kernel_config{
-	next_g.cfg {
+cf_config{
+	d.f {
 		spdNwwfpsc 5
 		nnslpll  5
 		gpu_id 0
 	}
-ase 
+
 # oh my god
 # 
 #
@@ -390,4 +401,14 @@ func TestFile(t *testing.T){
 	ss,_:=json.Marshal(e)
 	fmt.Println(string(ss))
 	fmt.Println(e.Elem("datas").AsArray())
+}
+// 1 core   3000000 goroutines per seconds
+func TestG(t *testing.T){
+	ls,err:=net.Listen("tcp4",":9900")
+	if err != nil{
+		panic(err)
+	}
+	fasthttp.Serve(ls, func(ctx *fasthttp.RequestCtx) {
+
+	})
 }

@@ -18,6 +18,15 @@ resource{
 
     }
 
+    - {
+        if `a>5 and b > 0`{
+
+        }
+        else{
+
+        }
+    }
+
 
 }
 
@@ -55,7 +64,6 @@ map golang{
    ls gg{
 
    }
-
 
 }
 
