@@ -66,6 +66,8 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 			ft := t.Field(i)
 			fv := val.Field(i)
 			tag := ft.Tag.Get("json")
+			defaultVal :=ft.Tag.Get("default")
+			requried:=ft.Tag.Get("required")
 			if tag == "" {
 				tag = ft.Name
 			}
@@ -76,7 +78,13 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 				vfe = e.Get(tag)
 			}
 			if vfe == nil {
-				continue
+				if requried == "true"{
+					return fmt.Errorf("%s is requried",ft.Name)
+				}
+				if defaultVal == ""{
+					continue
+				}
+				vfe = []string{defaultVal}
 			}
 			switch fv.Kind() {
 

@@ -3,9 +3,7 @@ package ngcfg
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/valyala/fasthttp"
 	"io/ioutil"
-	"net"
 	"testing"
 )
 
@@ -95,9 +93,9 @@ type Config struct {
 		Options map[string]string `json:"options"`
 		Ports []string `json:"ports"`
 	} `json:"server"`
-	
+
 	Kvs []map[string]string `json:"kvs"`
-	
+
 	Kgs []*Kgs `json:"kgs"`
 	E *Elem `json:"e"`
 }
@@ -403,12 +401,24 @@ func TestFile(t *testing.T){
 	fmt.Println(e.Elem("datas").AsArray())
 }
 // 1 core   3000000 goroutines per seconds
-func TestG(t *testing.T){
-	ls,err:=net.Listen("tcp4",":9900")
+func TestDefault(t *testing.T){
+	type Cfg struct {
+		Name string `json:"name" required:"true"`
+		Age string `json:"age" default:"5"`
+		Swa struct{
+			Nae string `json:"nae" default:"556"`
+		} `json:"swa" required:"true"`
+	}
+
+	cfgs:=`
+name 5
+
+
+`
+	v:=&Cfg{}
+	err:=UnmarshalFromBytes([]byte(cfgs),v)
 	if err != nil{
 		panic(err)
 	}
-	fasthttp.Serve(ls, func(ctx *fasthttp.RequestCtx) {
-
-	})
+	fmt.Println(v)
 }
