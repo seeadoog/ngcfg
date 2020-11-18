@@ -71,12 +71,18 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 			if tag == "" {
 				tag = ft.Name
 			}
+
 			var vfe interface{}
-			if useCtx{
-				vfe = e.GetCtx(tag)
+			if ft.Anonymous{
+				vfe = e
 			}else{
-				vfe = e.Get(tag)
+				if useCtx{
+					vfe = e.GetCtx(tag)
+				}else{
+					vfe = e.Get(tag)
+				}
 			}
+
 			if vfe == nil {
 				if requried == "true"{
 					return fmt.Errorf("%s is requried",ft.Name)

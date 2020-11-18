@@ -400,9 +400,16 @@ func TestFile(t *testing.T){
 	fmt.Println(string(ss))
 	fmt.Println(e.Elem("datas").AsArray())
 }
+
 // 1 core   3000000 goroutines per seconds
 func TestDefault(t *testing.T){
+	type Base struct {
+		GG string `json:"gg"`
+		EE string `json:"ee"`
+	}
+
 	type Cfg struct {
+		Base
 		Name string `json:"name" required:"true"`
 		Age string `json:"age" default:"5"`
 		Swa struct{
@@ -411,14 +418,22 @@ func TestDefault(t *testing.T){
 	}
 
 	cfgs:=`
+gg 688
 name 5
-
-
+swa{
+}
 `
 	v:=&Cfg{}
 	err:=UnmarshalFromBytes([]byte(cfgs),v)
 	if err != nil{
 		panic(err)
 	}
+	fmt.Println(v.GG)
+
+	//tp:=reflect.TypeOf(*v)
+	//for i:=0;i<tp.NumField();i++{
+	//	ft:=tp.Field(i)
+	//	fmt.Println(ft.Anonymous,ft.Name)
+	//}
 	fmt.Println(v)
 }
