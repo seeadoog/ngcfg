@@ -45,6 +45,13 @@ func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
 	return UnmarshalCtx(e, v)
 }
 
+var structTags = []string{"json"}
+
+//add struct tag for unmarshal
+func AddParseTag(tag string){
+	structTags = append(structTags,tag)
+}
+
 
 func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 	if val.Kind() ==reflect.Ptr{
@@ -65,12 +72,21 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		for i := 0; i < t.NumField(); i++ {
 			ft := t.Field(i)
 			fv := val.Field(i)
-			tag := ft.Tag.Get("json")
+
+			tag := ft.Name
+
+			for _, structTag := range structTags {
+				tagv:=ft.Tag.Get(structTag)
+				if tagv != ""{
+					tag = tagv
+					break
+				}
+			}
 			defaultVal :=ft.Tag.Get("default")
 			requried:=ft.Tag.Get("required")
-			if tag == "" {
-				tag = ft.Name
-			}
+			//if tag == "" {
+			//	tag = ft.Name
+			//}
 
 			var vfe interface{}
 			if ft.Anonymous{
