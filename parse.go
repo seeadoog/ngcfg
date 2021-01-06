@@ -10,7 +10,6 @@ aad{
 	sffds sdfds
 	dsfs   sdfdsf
 }
-
  */
 
 const(
@@ -52,6 +51,7 @@ func parse(b []byte)(*Elem,error){
 			return nil,err
 		}
 	}
+
 	if sc.stack.Len() != 1{
 		return nil,fmt.Errorf("'}' does not match '{'")
 	}
@@ -281,6 +281,7 @@ func stepEcpSep(s *scanner,c byte)error{
 	}
 	return nil
 }
+
 //{ ....\r\n
 func stepStartObject(s *scanner,c byte)error{
 	if isSpace(c){

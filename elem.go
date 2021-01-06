@@ -192,6 +192,8 @@ func (e *Elem)GetString(key string)(string,error){
 			return ss[0],nil
 		}
 		return "",nil
+	case string:
+		return v.(string),nil
 	}
 	return "",fmt.Errorf("type of %s is object",key)
 }
@@ -238,6 +240,8 @@ func (e *Elem)GetArray(key string)([]string,error){
 	switch arr.(type) {
 	case []string:
 		return arr.([]string),nil
+	case string:
+		return []string{arr.(string)},nil
 	}
 	return nil,fmt.Errorf("type of %s is not array",key)
 }

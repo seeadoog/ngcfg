@@ -10,9 +10,6 @@ func Parse(data []byte) (*Elem, error) {
 	return parse(data)
 }
 
-
-
-
 func Unmarshal(e *Elem, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
@@ -72,7 +69,6 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		for i := 0; i < t.NumField(); i++ {
 			ft := t.Field(i)
 			fv := val.Field(i)
-
 			tag := ft.Name
 
 			for _, structTag := range structTags {
