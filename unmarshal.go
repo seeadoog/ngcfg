@@ -161,7 +161,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		if tp.Key().Kind() != reflect.String {
 			return fmt.Errorf("key type of map must be string")
 		}
-		iter := e.RawMap().Iterator()
+		iter := e.Iterator()
 		for iter.HasNext() {
 			item:=iter.Next()
 			mk := item.Key
@@ -212,8 +212,9 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		valType := val.Type()
 		sliceElemType := valType.Elem()
 		slice := reflect.MakeSlice(valType, 0, rawMap.Len())
-		item := rawMap.MapItem()
-		for item != nil {
+		iter := rawMap.Iterator()
+		for iter.HasNext() {
+			item:=iter.Next()
 			var itemVal reflect.Value
 			if sliceElemType.Kind() == reflect.Ptr {
 				itemVal = reflect.New(sliceElemType.Elem())
