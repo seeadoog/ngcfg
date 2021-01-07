@@ -320,6 +320,7 @@ func (e *Elem) AsStringArray()([]string,error){
 	}
 	return res,nil
 }
+
 func (e *Elem) AsArray()([][]string,error){
 	it:=e.Iterator()
 	res:=make([][]string,0)

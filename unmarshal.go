@@ -161,8 +161,9 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		if tp.Key().Kind() != reflect.String {
 			return fmt.Errorf("key type of map must be string")
 		}
-		item := e.RawMap().MapItem()
-		for item != nil {
+		iter := e.RawMap().Iterator()
+		for iter.HasNext() {
+			item:=iter.Next()
 			mk := item.Key
 			mv := item.Val
 			switch mv.(type) {
@@ -187,11 +188,10 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 					val.SetMapIndex(reflect.ValueOf(mk), typv)
 				} else {
 					val.SetMapIndex(reflect.ValueOf(mk), typv.Elem())
-
 				}
+
 			case []string:
 				mvType := tp.Elem()
-
 				if mvType.Kind() == reflect.Interface {
 					val.SetMapIndex(reflect.ValueOf(mk), reflect.ValueOf(mv))
 					continue
