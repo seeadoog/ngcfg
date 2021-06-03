@@ -351,7 +351,7 @@ cf_config{
 }
 
 `)
-	e,err:=Parse(cfg)
+	_,err:=Parse(cfg)
 	if err != nil{
 		panic(err)
 	}
@@ -372,11 +372,9 @@ cf_config{
 	//fmt.Println(e.Elem("http").GetBool("ssl"))
 	//fmt.Println(e.Elem("http").Elem("wjge").GetCtxBool("ssl"))
 
-	bs,err := e.MarshalCfg(0)
 	if err != nil{
 		panic(err)
 	}
-	fmt.Println(string(bs))
 }
 
 
@@ -426,6 +424,7 @@ func TestDefault(t *testing.T){
 gg 688
 name 5
 swa{
+nae 5
 }
 `
 	v:=&Cfg{}
