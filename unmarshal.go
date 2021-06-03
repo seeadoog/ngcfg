@@ -18,7 +18,7 @@ func Unmarshal(e *Elem, v interface{}) error {
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val,false)
+	return setObject(e, val,false,"")
 }
 
 func UnmarshalFromBytes(data []byte, v interface{}) error {
@@ -34,7 +34,7 @@ func UnmarshalCtx(e *Elem, v interface{}) error {
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val,true)
+	return setObject(e, val,true,"")
 }
 
 func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
@@ -53,7 +53,7 @@ func AddParseTag(tag string){
 }
 
 
-func setObject(e *Elem, val reflect.Value,useCtx bool) error {
+func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 	if val.Kind() ==reflect.Ptr{
 		if val.IsNil(){
 			vt:=val.Type()
@@ -89,7 +89,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 			//}
 
 			var vfe interface{}
-			if ft.Anonymous{
+			if ft.Anonymous{ // 包含关系
 				vfe = e
 			}else{
 				if useCtx{
@@ -98,10 +98,11 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 					vfe = e.Get(tag)
 				}
 			}
+			cpath := path+"."+tag
 
 			if vfe == nil {
 				if requried == "true"{
-					return fmt.Errorf("%s is requried",ft.Name)
+					return fmt.Errorf("%s is requried",cpath)
 				}
 				if defaultVal == ""{
 					continue
@@ -117,7 +118,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 					return fmt.Errorf("%s is not object", tag)
 				}
 
-				if err := setObject(ele, fv,useCtx); err != nil {
+				if err := setObject(ele, fv,useCtx,cpath); err != nil {
 					return err
 				}
 			default:
@@ -128,7 +129,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 						if !ok {
 							return fmt.Errorf("%s is not object in array object", tag)
 						}
-						if err := setObject(ele, fv,useCtx); err != nil {
+						if err := setObject(ele, fv,useCtx,cpath); err != nil {
 							return err
 						}
 						break
@@ -183,7 +184,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 					typv = reflect.New(mvType)
 				}
 
-				if err := setObject(mv.(*Elem), typv,useCtx); err != nil {
+				if err := setObject(mv.(*Elem), typv,useCtx,path+"."+mk); err != nil {
 					return err
 				}
 
@@ -217,6 +218,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 		sliceElemType := valType.Elem()
 		slice := reflect.MakeSlice(valType, 0, rawMap.Len())
 		item := rawMap.MapItem()
+		index := 0
 		for item != nil {
 			var itemVal reflect.Value
 			if sliceElemType.Kind() == reflect.Ptr {
@@ -230,7 +232,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 					return err
 				}
 			case *Elem:
-				if err := setObject(item.Val.(*Elem), itemVal.Elem(),useCtx); err != nil {
+				if err := setObject(item.Val.(*Elem), itemVal.Elem(),useCtx,fmt.Sprintf("[%d]",index)); err != nil {
 					return err
 				}
 			}
@@ -241,6 +243,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool) error {
 			}
 
 			item = item.Next()
+			index ++
 		}
 		val.Set(slice)
 		return nil

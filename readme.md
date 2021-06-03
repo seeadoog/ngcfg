@@ -66,7 +66,7 @@ user{
 `
 
 type User struct{
-    Name string `json:"name"`
+    Name string `json:"name" default:"jhon"`
 }
 
 type Config struct{

@@ -355,23 +355,28 @@ cf_config{
 	if err != nil{
 		panic(err)
 	}
-	b,_:=json.Marshal(e)
-
-	it:=e.Iterator()
-	for it.HasNext(){
-		e:=it.Next()
-		fmt.Println(e.Key,e.Val)
-	}
+	//b,_:=json.Marshal(e)
 	//
-	fmt.Println(string(b))
-	s,err:=e.GetElem("server")
-	fmt.Println(err)
-	api1,_:=s.GetElem("api1")
-	fmt.Println(api1.GetCtxString("workers"))
-	fmt.Println(e.Elem("api").Elem("/v2/update").AsStringArray())
-	fmt.Println(e.Elem("http").GetBool("ssl"))
-	fmt.Println(e.Elem("http").Elem("wjge").GetCtxBool("ssl"))
+	//it:=e.Iterator()
+	//for it.HasNext(){
+	//	e:=it.Next()
+	//	fmt.Println(e.Key,e.Val)
+	//}
+	////
+	//fmt.Println(string(b))
+	//s,err:=e.GetElem("server")
+	//fmt.Println(err)
+	//api1,_:=s.GetElem("api1")
+	//fmt.Println(api1.GetCtxString("workers"))
+	//fmt.Println(e.Elem("api").Elem("/v2/update").AsStringArray())
+	//fmt.Println(e.Elem("http").GetBool("ssl"))
+	//fmt.Println(e.Elem("http").Elem("wjge").GetCtxBool("ssl"))
 
+	bs,err := e.MarshalCfg(0)
+	if err != nil{
+		panic(err)
+	}
+	fmt.Println(string(bs))
 }
 
 
@@ -413,7 +418,7 @@ func TestDefault(t *testing.T){
 		Name string `json:"name" required:"true"`
 		Age string `json:"age" default:"5"`
 		Swa struct{
-			Nae string `json:"nae" default:"556"`
+			Nae string `json:"nae" default:"556" required:"true"`
 		} `json:"swa" required:"true"`
 	}
 
