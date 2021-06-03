@@ -129,6 +129,7 @@ func (m *LinkedMap)MarshalJSON()([]byte,error){
 		bf.WriteByte(',')
 		//bf.WriteString(fmt.Sprintf("\"%s\":%s,",e.Key,string(b)))
 	}
+
 	b:=bf.Bytes()
 	if len(b)>1{
 		b[len(b)-1] = '}'

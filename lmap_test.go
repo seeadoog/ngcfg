@@ -13,7 +13,6 @@ func TestNewLinkedMap(t *testing.T) {
 	b,_:=json.Marshal(a)
 	fmt.Println(len(b),string(b))
 	m:=NewLinkedMap()
-
 	m.Set("1",1)
 	m.Set("2",1)
 	m.Set("3",1)
