@@ -132,7 +132,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 			default:
 				if fv.Kind() == reflect.Slice {
 					elemKind := fv.Type().Elem().Kind()
-					if elemKind == reflect.Struct || elemKind == reflect.Ptr || elemKind == reflect.Map{
+					if elemKind == reflect.Struct || elemKind == reflect.Ptr || elemKind == reflect.Map || elemKind == reflect.Interface{
 						ele, ok := vfe.(*Elem)
 						if !ok {
 							return fmt.Errorf("%s is not object in array object", tag)
