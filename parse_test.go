@@ -150,12 +150,16 @@ type NginxServer struct {
 	Cmds []string `json:"cmds"`
 	Schema string `json:"schema"`
 	Ids []int `json:"ids"`
+	Onj interface{} `json:"onj"`
 }
 
 func TestDemo(t *testing.T){
 	c:=&NginxServer{}
 	cfg:=`
-worker_process 5  #进程数量       
+worker_process 5  #进程数量   
+onj{
+	aaa t
+}
 server{
     proto   http   # protocols
     # listen addrs 
