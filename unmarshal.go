@@ -119,7 +119,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 			}
 			switch fv.Kind() {
 
-			case reflect.Struct, reflect.Ptr, reflect.Map:
+			case reflect.Struct, reflect.Ptr, reflect.Map,reflect.Interface:
 
 				ele, ok := vfe.(*Elem)
 				if !ok {
