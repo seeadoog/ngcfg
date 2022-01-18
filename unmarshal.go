@@ -66,9 +66,17 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 		val.Set(reflect.ValueOf(*e))
 		return nil
 	}
+	t := val.Type()
 	switch val.Kind() {
+	case reflect.Interface:
+		if reflect.TypeOf(e).Implements(t){
+			val.Set(reflect.ValueOf(e))
+			return nil
+		}else{
+			return fmt.Errorf("cannot assign type *ngcfg.Elem to %s",t.String())
+		}
 	case reflect.Struct:
-		t := val.Type()
+
 		for i := 0; i < t.NumField(); i++ {
 			ft := t.Field(i)
 			fv := val.Field(i)
