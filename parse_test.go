@@ -10,7 +10,7 @@ import (
 /**
 aa bb
 cc dd
- */
+*/
 var cfg = []byte(` 
 server {  # server config 
 	host 127.0.0.1  # server listen host
@@ -65,73 +65,77 @@ http admin{
 }
 
 `)
+
 func Test_parse(t *testing.T) {
-	e,err:=parse(cfg)
-	fmt.Println(e,err)
-	ser:=e.Get("server").(*Elem)
+	e, err := parse(cfg)
+	fmt.Println(e, err)
+	ser := e.Get("server").(*Elem)
 	fmt.Println(ser.Get("host"))
 	fmt.Println(ser.Get("port"))
 	fmt.Println(ser.Get("tps"))
 	fmt.Println(ser.GetBool("bingo"))
-	ans:=ser.Get("ans").(*Elem)
+	ans := ser.Get("ans").(*Elem)
 	fmt.Println(ans.GetNumber("name"))
 	fmt.Println(ans.Get("dfg"))
 	fmt.Println(ans.GetString("du"))
-	handlers:=ser.Get("handlers").(*Elem)
+	handlers := ser.Get("handlers").(*Elem)
 	fmt.Println(handlers.GetString("auth_by_lua_block"))
 	fmt.Println(handlers.GetString("log_by_lua_block"))
 	fmt.Println(handlers.GetString("content_by_lua"))
 }
 
-
 type Config struct {
-	Common struct{
-
+	Common struct {
 	} `json:"common"`
-	Server struct{
-		Listen string `json:"listen"`
+	Server struct {
+		Listen  string            `json:"listen"`
 		Options map[string]string `json:"options"`
-		Ports []string `json:"ports"`
+		Ports   []string          `json:"ports"`
 	} `json:"server"`
 
 	Kvs []map[string]string `json:"kvs"`
 
 	Kgs []*Kgs `json:"kgs"`
-	E *Elem `json:"e"`
+	E   *Elem  `json:"e"`
+
+	D interface{} `json:"d"`
+
+	F map[string]interface{} `json:"f"`
+	g string                 `json:"g"`
 }
 
 type Kgs struct {
 	Name string `json:"name"`
-	Age int `json:"age"`
+	Age  int    `json:"age"`
 }
 
-func TestParseCfg(t *testing.T){
-	b,err:=ioutil.ReadFile("test.cfg")
-	if err != nil{
+func TestParseCfg(t *testing.T) {
+	b, err := ioutil.ReadFile("test.cfg")
+	if err != nil {
 		panic(err)
 	}
-	c:=&Config{}
-	fmt.Println(UnmarshalFromBytes(b,c))
+	c := &Config{}
+	fmt.Println(UnmarshalFromBytes(b, c))
 	fmt.Println(c)
 }
 
 type Server struct {
-	Proto string `json:"proto"`
-	Listen []string `json:"listen"`
-	AccessByLua string `json:"access_by_lua"`
+	Proto       string   `json:"proto"`
+	Listen      []string `json:"listen"`
+	AccessByLua string   `json:"access_by_lua"`
 }
 
 type Upstream struct {
-	Hosts []string `json:"hosts"`
+	Hosts   []string `json:"hosts"`
 	Targets []string `json:"targets"`
 }
 
 type Mysql struct {
-	Addr string `json:"addr"`
+	Addr     string `json:"addr"`
 	Password string `json:"password"`
 }
 type Redis struct {
-	Addr string `json:"addr"`
+	Addr     string `json:"addr"`
 	Password string `json:"password"`
 }
 
@@ -140,22 +144,22 @@ type Storage struct {
 	Mysql Mysql `json:"mysql"`
 }
 type NginxServer struct {
-	CfgJson string `json:"cfg_json"`
-	WorkerProcess int `json:"worker_process"`
-	Server *Server `json:"server"`
-	Upstreams []Upstream `json:"upstreams"`
-	Storage map[string]Redis `json:"storage"`
-	Args map[string]string `json:"args"`
-	E Elem `json:"e"`
-	Cmds []string `json:"cmds"`
-	Schema string `json:"schema"`
-	Ids []int `json:"ids"`
-	Onj interface{} `json:"onj"`
+	CfgJson       string            `json:"cfg_json"`
+	WorkerProcess int               `json:"worker_process"`
+	Server        *Server           `json:"server"`
+	Upstreams     []Upstream        `json:"upstreams"`
+	Storage       map[string]Redis  `json:"storage"`
+	Args          map[string]string `json:"args"`
+	E             Elem              `json:"e"`
+	Cmds          []string          `json:"cmds"`
+	Schema        string            `json:"schema"`
+	Ids           []int             `json:"ids"`
+	Onj           interface{}       `json:"onj"`
 }
 
-func TestDemo(t *testing.T){
-	c:=&NginxServer{}
-	cfg:=`
+func TestDemo(t *testing.T) {
+	c := &NginxServer{}
+	cfg := `
 worker_process 5  #进程数量   
 onj{
 	aaa t
@@ -274,17 +278,17 @@ ids{
 }
 
 `
-	if err:=UnmarshalFromBytesCtx([]byte(cfg),c);err != nil{
+	if err := UnmarshalFromBytesCtx([]byte(cfg), c); err != nil {
 		panic(err)
 	}
 
-	b,_:=json.Marshal(c)
+	b, _ := json.Marshal(c)
 
 	fmt.Println(string(b))
 	fmt.Println(c.E.GetBool("name"))
 	//it:=c.E.Iterator()
-	e,err:=c.E.GetElem("child")
-	if err != nil{
+	e, err := c.E.GetElem("child")
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println(e.GetString("age"))
@@ -293,8 +297,8 @@ ids{
 
 }
 
-func TestParseCtx(t *testing.T){
-	cfg:=[]byte(`
+func TestParseCtx(t *testing.T) {
+	cfg := []byte(`
 
 workers 1
 timeout 5
@@ -355,8 +359,8 @@ cf_config{
 }
 
 `)
-	_,err:=Parse(cfg)
-	if err != nil{
+	_, err := Parse(cfg)
+	if err != nil {
 		panic(err)
 	}
 	//b,_:=json.Marshal(e)
@@ -376,40 +380,36 @@ cf_config{
 	//fmt.Println(e.Elem("http").GetBool("ssl"))
 	//fmt.Println(e.Elem("http").Elem("wjge").GetCtxBool("ssl"))
 
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 }
-
 
 type NginxConf struct {
 	WorkerProcess int
-	Http map[string]struct{
-
+	Http          map[string]struct {
 	} `json:"http"`
-	Tcp map[string]struct{
-
+	Tcp map[string]struct {
 	} `json:"tcp"`
-
 }
 
-func TestFile(t *testing.T){
-	b,err:=ioutil.ReadFile(`test.cfga`)
-	if err != nil{
+func TestFile(t *testing.T) {
+	b, err := ioutil.ReadFile(`test.cfga`)
+	if err != nil {
 		panic(err)
 	}
-	e,err:=parse(b)
-	if err != nil{
+	e, err := parse(b)
+	if err != nil {
 		panic(err)
 	}
 
-	ss,_:=json.Marshal(e)
+	ss, _ := json.Marshal(e)
 	fmt.Println(string(ss))
 	fmt.Println(e.Elem("datas").AsArray())
 }
 
 // 1 core   3000000 goroutines per seconds
-func TestDefault(t *testing.T){
+func TestDefault(t *testing.T) {
 	type Base struct {
 		GG string `json:"gg"`
 		EE string `json:"ee"`
@@ -418,22 +418,22 @@ func TestDefault(t *testing.T){
 	type Cfg struct {
 		Base
 		Name string `json:"name" required:"true"`
-		Age string `json:"age" default:"5"`
-		Swa struct{
+		Age  string `json:"age" default:"5"`
+		Swa  struct {
 			Nae string `json:"nae" default:"556" required:"true"`
 		} `json:"swa" required:"true"`
 	}
 
-	cfgs:=`
+	cfgs := `
 gg 688
 name 5
 swa{
 nae 5
 }
 `
-	v:=&Cfg{}
-	err:=UnmarshalFromBytes([]byte(cfgs),v)
-	if err != nil{
+	v := &Cfg{}
+	err := UnmarshalFromBytes([]byte(cfgs), v)
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println(v.GG)

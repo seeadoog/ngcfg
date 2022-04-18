@@ -10,15 +10,12 @@ func Parse(data []byte) (*Elem, error) {
 	return parse(data)
 }
 
-
-
-
 func Unmarshal(e *Elem, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val,false,"")
+	return setObject(e, val, false, "")
 }
 
 func UnmarshalFromBytes(data []byte, v interface{}) error {
@@ -26,7 +23,7 @@ func UnmarshalFromBytes(data []byte, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return Unmarshal(e, v)
+	return UnmarshalFromElem(e, v)
 }
 
 func UnmarshalCtx(e *Elem, v interface{}) error {
@@ -34,7 +31,7 @@ func UnmarshalCtx(e *Elem, v interface{}) error {
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val,true,"")
+	return setObject(e, val, true, "")
 }
 
 func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
@@ -48,32 +45,31 @@ func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
 var structTags = []string{"json"}
 
 //add struct tag for unmarshal
-func AddParseTag(tag string){
-	structTags = append(structTags,tag)
+func AddParseTag(tag string) {
+	structTags = append(structTags, tag)
 }
 
-
-func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
-	if val.Kind() ==reflect.Ptr{
-		if val.IsNil(){
-			vt:=val.Type()
+func setObject(e *Elem, val reflect.Value, useCtx bool, path string) error {
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			vt := val.Type()
 			v := reflect.New(vt.Elem())
 			val.Set(v)
 		}
 		val = val.Elem()
 	}
-	if _,ok:=val.Interface().(Elem);ok{
+	if _, ok := val.Interface().(Elem); ok {
 		val.Set(reflect.ValueOf(*e))
 		return nil
 	}
 	t := val.Type()
 	switch val.Kind() {
 	case reflect.Interface:
-		if reflect.TypeOf(e).Implements(t){
+		if reflect.TypeOf(e).Implements(t) {
 			val.Set(reflect.ValueOf(e))
 			return nil
-		}else{
-			return fmt.Errorf("cannot assign type *ngcfg.Elem to %s",t.String())
+		} else {
+			return fmt.Errorf("cannot assign type *ngcfg.Elem to %s", t.String())
 		}
 	case reflect.Struct:
 
@@ -84,60 +80,60 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 			tag := ft.Name
 
 			for _, structTag := range structTags {
-				tagv:=ft.Tag.Get(structTag)
-				if tagv != ""{
+				tagv := ft.Tag.Get(structTag)
+				if tagv != "" {
 					tag = tagv
 					break
 				}
 			}
-			defaultVal :=ft.Tag.Get("default")
-			requried:=ft.Tag.Get("required")
+			defaultVal := ft.Tag.Get("default")
+			requried := ft.Tag.Get("required")
 			//if tag == "" {
 			//	tag = ft.Name
 			//}
 
 			var vfe interface{}
-			if ft.Anonymous{ // 包含关系
+			if ft.Anonymous { // 包含关系
 				vfe = e
-			}else{
-				if useCtx{
+			} else {
+				if useCtx {
 					vfe = e.GetCtx(tag)
-				}else{
+				} else {
 					vfe = e.Get(tag)
 				}
 			}
-			cpath := path+"."+tag
+			cpath := path + "." + tag
 
 			if vfe == nil {
-				if requried == "true"{
-					return fmt.Errorf("%s is requried",cpath)
+				if requried == "true" {
+					return fmt.Errorf("%s is requried", cpath)
 				}
-				if defaultVal == ""{
+				if defaultVal == "" {
 					continue
 				}
 				vfe = []string{defaultVal}
 			}
 			switch fv.Kind() {
 
-			case reflect.Struct, reflect.Ptr, reflect.Map,reflect.Interface:
+			case reflect.Struct, reflect.Ptr, reflect.Map, reflect.Interface:
 
 				ele, ok := vfe.(*Elem)
 				if !ok {
 					return fmt.Errorf("%s is not object", tag)
 				}
 
-				if err := setObject(ele, fv,useCtx,cpath); err != nil {
+				if err := setObject(ele, fv, useCtx, cpath); err != nil {
 					return err
 				}
 			default:
 				if fv.Kind() == reflect.Slice {
 					elemKind := fv.Type().Elem().Kind()
-					if elemKind == reflect.Struct || elemKind == reflect.Ptr || elemKind == reflect.Map || elemKind == reflect.Interface{
+					if elemKind == reflect.Struct || elemKind == reflect.Ptr || elemKind == reflect.Map || elemKind == reflect.Interface {
 						ele, ok := vfe.(*Elem)
 						if !ok {
 							return fmt.Errorf("%s is not object in array object", tag)
 						}
-						if err := setObject(ele, fv,useCtx,cpath); err != nil {
+						if err := setObject(ele, fv, useCtx, cpath); err != nil {
 							return err
 						}
 						break
@@ -146,14 +142,14 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 
 				arr, ok := vfe.([]string)
 				if !ok {
-					e,ok:=vfe.(*Elem)
-					if ok{
-						a,err:=e.AsStringArray()
-						if err != nil{
-							return fmt.Errorf("%s is object type, want:[]string:%w", tag,err)
+					e, ok := vfe.(*Elem)
+					if ok {
+						a, err := e.AsStringArray()
+						if err != nil {
+							return fmt.Errorf("%s is object type, want:[]string:%w", tag, err)
 						}
 						arr = a
-					}else{
+					} else {
 						return fmt.Errorf("%s is object type, want:[]string", tag)
 					}
 
@@ -192,7 +188,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 					typv = reflect.New(mvType)
 				}
 
-				if err := setObject(mv.(*Elem), typv,useCtx,path+"."+mk); err != nil {
+				if err := setObject(mv.(*Elem), typv, useCtx, path+"."+mk); err != nil {
 					return err
 				}
 
@@ -240,7 +236,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 					return err
 				}
 			case *Elem:
-				if err := setObject(item.Val.(*Elem), itemVal.Elem(),useCtx,fmt.Sprintf("[%d]",index)); err != nil {
+				if err := setObject(item.Val.(*Elem), itemVal.Elem(), useCtx, fmt.Sprintf("[%d]", index)); err != nil {
 					return err
 				}
 			}
@@ -251,7 +247,7 @@ func setObject(e *Elem, val reflect.Value,useCtx bool,path string) error {
 			}
 
 			item = item.Next()
-			index ++
+			index++
 		}
 		val.Set(slice)
 		return nil
@@ -315,5 +311,5 @@ func setVal(val []string, v reflect.Value) error {
 		v.Set(slice)
 		return nil
 	}
-	return fmt.Errorf("cannot set value:%v to type:%s",val, v.Kind().String())
+	return fmt.Errorf("cannot set value:%v to type:%s", val, v.Kind().String())
 }

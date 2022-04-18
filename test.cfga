@@ -5,6 +5,9 @@ server h1{
     worker_process 10
 }
 
+common {
+}
+
 resource{
     redis lsa{
         addrs 232.31.22.22
@@ -66,4 +69,16 @@ map golang{
    }
 
 }
+
+config:
+    key value
+
+value:
+    string |
+    object
+
+object:{
+
+    }
+
 
