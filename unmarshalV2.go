@@ -21,6 +21,14 @@ var (
 	elemType = reflect.TypeOf(&Elem{})
 )
 
+type Unmarshaller interface {
+	UnmarshalCfg(val interface{}) error
+}
+
+var (
+	unmarshalType = reflect.TypeOf(new(Unmarshaller)).Elem()
+)
+
 func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error {
 	if in == nil {
 		return nil
@@ -29,6 +37,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 	if v.Kind() != reflect.Ptr && !v.CanSet() {
 		return nil
 	}
+
 	if v.Type() == elemType {
 		inv := reflect.ValueOf(in)
 		if inv.Type() == elemType {
@@ -36,6 +45,28 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			return nil
 		}
 		return fmt.Errorf("%s is not *Elem ,but :%v", path, inv.Type())
+	}
+	if v.Type().Implements(unmarshalType) {
+		switch v.Kind() {
+		case reflect.Ptr:
+			if v.IsNil() {
+				elemType := v.Type().Elem()
+				newV := reflect.New(elemType)
+				err := (newV.Interface().(Unmarshaller)).UnmarshalCfg(in)
+				if err != nil {
+					return err
+				}
+				v.Set(newV)
+				return nil
+			}
+			fallthrough
+		default:
+			err := v.Interface().(Unmarshaller).UnmarshalCfg(in)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
 	}
 
 	switch v.Kind() {

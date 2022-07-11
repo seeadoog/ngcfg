@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+type Ccstring string
+
+func (c *Ccstring) UnmarshalCfg(v interface{}) error {
+	*c = "axxxxxxx"
+	return nil
+}
+
 func TestUnmarshalFromElem(t *testing.T) {
 
 	b := []byte(`
@@ -45,7 +52,7 @@ e {
 	dd dd
 }
 g ttt
-
+ips "http://10.1.87.{50...59}:8001/ats/traffics"
 `)
 	c := &Config{}
 
@@ -64,5 +71,6 @@ g ttt
 
 	fmt.Println(c.F)
 	fmt.Println(c.E)
-
+	fmt.Println(c.Ips)
+	fmt.Println(reflect.TypeOf((Ccstring("x"))).Implements(unmarshalType))
 }

@@ -3,6 +3,7 @@ package ngcfg
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/seeadoog/ngcfg/unmarshalusage"
 	"io/ioutil"
 	"testing"
 )
@@ -100,8 +101,9 @@ type Config struct {
 
 	D interface{} `json:"d"`
 
-	F map[string]interface{} `json:"f"`
-	g string                 `json:"g"`
+	F   map[string]interface{}         `json:"f"`
+	g   string                         `json:"g"`
+	Ips *unmarshalusage.ConsecutiveIps `json:"ips"`
 }
 
 type Kgs struct {
