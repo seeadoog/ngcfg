@@ -1,4 +1,4 @@
-package unmarshalusage
+package unmarshaltlp
 
 import (
 	"fmt"
@@ -148,5 +148,39 @@ func convertSeg2Ips(segs []ipseg, idx int, buf []string, res *[]string) {
 			buf[idx] = strconv.Itoa(i)
 			convertSeg2Ips(segs, idx+1, buf, res)
 		}
+	}
+}
+
+//
+
+const (
+	kb = 1024
+	mb = 1024 * kb
+	gb = 1024 * mb
+	tb = 1024 * gb
+)
+
+func ParseByteSize(s string) (int, error) {
+	if len(s) == 0 {
+		return 0, fmt.Errorf("invalid byte size:%v", s)
+	}
+	n, err := strconv.ParseFloat(s[:len(s)-1], 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid byte size:%v", s)
+	}
+
+	switch s[len(s)-1] {
+	case 'b', 'B':
+		return int(n), nil
+	case 'k', 'K':
+		return int(n * kb), nil
+	case 'm', 'M':
+		return int(n * mb), nil
+	case 'g', 'G':
+		return int(n * gb), nil
+	case 't', 'T':
+		return int(n * tb), nil
+	default:
+		return 0, fmt.Errorf("invalid byte size:%v", s)
 	}
 }

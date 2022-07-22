@@ -8,7 +8,7 @@ import (
 
 type Ccstring string
 
-func (c *Ccstring) UnmarshalCfg(v interface{}) error {
+func (c *Ccstring) UnmarshalCfg(path string, v interface{}) error {
 	*c = "axxxxxxx"
 	return nil
 }

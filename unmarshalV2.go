@@ -22,7 +22,7 @@ var (
 )
 
 type Unmarshaller interface {
-	UnmarshalCfg(val interface{}) error
+	UnmarshalCfg(path string, val interface{}) error
 }
 
 var (
@@ -52,7 +52,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			if v.IsNil() {
 				elemType := v.Type().Elem()
 				newV := reflect.New(elemType)
-				err := (newV.Interface().(Unmarshaller)).UnmarshalCfg(in)
+				err := (newV.Interface().(Unmarshaller)).UnmarshalCfg(path, in)
 				if err != nil {
 					return err
 				}
@@ -61,7 +61,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			}
 			fallthrough
 		default:
-			err := v.Interface().(Unmarshaller).UnmarshalCfg(in)
+			err := v.Interface().(Unmarshaller).UnmarshalCfg(path, in)
 			if err != nil {
 				return err
 			}
