@@ -11,23 +11,23 @@ type MapElem struct {
 	Val  interface{}
 	next *MapElem
 	pre  *MapElem
-	l *LinkedMap
+	l    *LinkedMap
 }
 
-func (e *MapElem)MarshalJSON()([]byte,error){
+func (e *MapElem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.Val)
 }
 
-func (m *MapElem)Next()*MapElem{
-	if m.next == m.l.back{
+func (m *MapElem) Next() *MapElem {
+	if m.next == m.l.back {
 		return nil
 	}
 	return m.next
 }
 
-func NewLinkedMap()*LinkedMap{
-	m:=&LinkedMap{
-		data: map[string]*MapElem{},
+func NewLinkedMap() *LinkedMap {
+	m := &LinkedMap{
+		data:  map[string]*MapElem{},
 		front: nil,
 		back:  nil,
 	}
@@ -42,85 +42,80 @@ func NewLinkedMap()*LinkedMap{
 }
 
 type LinkedMap struct {
-	data map[string]*MapElem
-	front *MapElem
-	back *MapElem
+	data     map[string]*MapElem
+	front    *MapElem
+	back     *MapElem
 	iterNode *MapElem
-
 }
 
-
-func (m *LinkedMap)Len()int{
+func (m *LinkedMap) Len() int {
 	return len(m.data)
 }
+
 //front 1->2->3->back
-func (m *LinkedMap)pushBack(e *MapElem){
-	pb:=m.back.pre
+func (m *LinkedMap) pushBack(e *MapElem) {
+	pb := m.back.pre
 	pb.next = e
 	e.next = m.back
 	m.back.pre = e
 	e.pre = pb
 }
 
-
-func (m *LinkedMap)Set(key string,val interface{}){
-	e,ok:=m.data[key]
-	if ok{
+func (m *LinkedMap) Set(key string, val interface{}) {
+	e, ok := m.data[key]
+	if ok {
 		e.Val = val
 		return
 	}
-	e = &MapElem{Val:val,l:m,Key:key}
+	e = &MapElem{Val: val, l: m, Key: key}
 	m.pushBack(e)
-	m.data[key]=e
+	m.data[key] = e
 }
 
-func (m *LinkedMap)Get(key string)(interface{},bool){
-	v,ok:=m.data[key]
-	if !ok{
-		return nil,false
+func (m *LinkedMap) Get(key string) (interface{}, bool) {
+	v, ok := m.data[key]
+	if !ok {
+		return nil, false
 	}
-	return v.Val,ok
+	return v.Val, ok
 }
 
-func (m *LinkedMap)MapItem()*MapElem{
+func (m *LinkedMap) MapItem() *MapElem {
 	return m.front.next
 }
 
-
-func (m *LinkedMap)Iterator()Iterator{
-	  m.iterNode = m.front.next
-      return m
+func (m *LinkedMap) Iterator() Iterator {
+	m.iterNode = m.front.next
+	return m
 }
 
 func (m *LinkedMap) HasNext() bool {
-	 if m.iterNode ==m.back || m.iterNode == nil{
-	 	return false
-	 }
-	 return true
+	if m.iterNode == m.back || m.iterNode == nil {
+		return false
+	}
+	return true
 }
 
-
-
 func (m *LinkedMap) Next() *MapElem {
-	v:=m.iterNode
+	v := m.iterNode
 	m.iterNode = m.iterNode.next
 	return v
 }
 
 type Iterator interface {
-	HasNext()bool
-	Next()*MapElem
+	HasNext() bool
+	Next() *MapElem
 }
 
-func (m *LinkedMap)MarshalJSON()([]byte,error){
-	it:=m.Iterator()
-	bf:=bytes.Buffer{}
+func (m *LinkedMap) MarshalJSON() ([]byte, error) {
+	it := m.Iterator()
+	bf := bytes.Buffer{}
 	bf.WriteString("{")
-	for it.HasNext(){
-		e:=it.Next()
-		b,err:=json.Marshal(e.Val)
-		if err != nil{
-			return nil,err
+	for it.HasNext() {
+		e := it.Next()
+		b, err := json.Marshal(e.Val)
+		if err != nil {
+			return nil, err
 		}
 		bf.WriteString("\"")
 		bf.WriteString(e.Key)
@@ -130,13 +125,13 @@ func (m *LinkedMap)MarshalJSON()([]byte,error){
 		//bf.WriteString(fmt.Sprintf("\"%s\":%s,",e.Key,string(b)))
 	}
 
-	b:=bf.Bytes()
-	if len(b)>1{
+	b := bf.Bytes()
+	if len(b) > 1 {
 		b[len(b)-1] = '}'
-	}else{
-		b = append(b,'}')
+	} else {
+		b = append(b, '}')
 	}
-	return b,nil
+	return b, nil
 }
 
 const (
@@ -144,6 +139,7 @@ const (
 	stautsInKeyStr
 	statusValueBeginPre
 )
+
 //{"aa":{"cc":"dd"}}
 //func(m *LinkedMap)UnmarshalJSON(b []byte)error{
 //	json.Unmarshal()

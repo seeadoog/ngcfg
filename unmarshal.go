@@ -11,11 +11,7 @@ func Parse(data []byte) (*Elem, error) {
 }
 
 func Unmarshal(e *Elem, v interface{}) error {
-	val := reflect.ValueOf(v)
-	if val.Kind() != reflect.Ptr {
-		panic("value must be pointer")
-	}
-	return setObject(e, val, false, "")
+	return UnmarshalFromElem(e, v)
 }
 
 func UnmarshalFromBytes(data []byte, v interface{}) error {

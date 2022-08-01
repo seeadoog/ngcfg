@@ -14,7 +14,7 @@ type Elem struct {
 }
 
 func (e *Elem) getIdx() string {
-	sidx := "index_" + strconv.Itoa(e.idx)
+	sidx := "__index__" + strconv.Itoa(e.idx)
 	e.idx++
 	return sidx
 }
@@ -332,6 +332,9 @@ func (e *Elem) AsArray() ([][]string, error) {
 	return res, nil
 }
 
+func (e *Elem) Decode(v interface{}) error {
+	return UnmarshalFromElem(e, v)
+}
 func boolOf(s string) (bool, error) {
 	switch s {
 	case "true", "1", "", "on", "yes", "ok":

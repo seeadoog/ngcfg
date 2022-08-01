@@ -14,7 +14,7 @@ func UnmarshalFromElem(in *Elem, template interface{}) error {
 	if v.Kind() != reflect.Ptr || v.IsNil() {
 		panic("template value is nil or not pointer")
 	}
-	return unmarshalObject2Struct("", in, v)
+	return unmarshalObject2Struct("", in, v, false)
 }
 
 var (
@@ -27,9 +27,15 @@ type Unmarshaller interface {
 
 var (
 	unmarshalType = reflect.TypeOf(new(Unmarshaller)).Elem()
+
+	customTagValidator = map[string]func(path string, v interface{}, tagV string) error{}
 )
 
-func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error {
+func RegisterCustomTagValidator(tagname string, f func(path string, v interface{}, tagV string) error) {
+	customTagValidator[tagname] = f
+}
+
+func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx bool) error {
 	if in == nil {
 		return nil
 	}
@@ -79,14 +85,14 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			default:
 				nv = reflect.New(elemType)
 			}
-			err := unmarshalObject2Struct(path, in, nv.Elem())
+			err := unmarshalObject2Struct(path, in, nv.Elem(), usectx)
 			if err != nil {
 				return err
 			}
 			v.Set(nv)
 			return nil
 		}
-		return unmarshalObject2Struct(path, in, v.Elem())
+		return unmarshalObject2Struct(path, in, v.Elem(), usectx)
 	case reflect.Slice:
 		//arr, ok := in.(*Elem)
 		t := v.Type()
@@ -97,7 +103,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			slice := reflect.MakeSlice(t, 0, len(arr))
 			for idx, strv := range arr {
 				elemVal := reflect.New(elemType)
-				err := unmarshalObject2Struct(path+fmt.Sprintf("[%v]", idx), strv, elemVal)
+				err := unmarshalObject2Struct(path+fmt.Sprintf("[%v]", idx), strv, elemVal, usectx)
 				if err != nil {
 					return err
 				}
@@ -112,7 +118,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			for it.HasNext() {
 				e := it.Next()
 				elemVal := reflect.New(elemType)
-				err := unmarshalObject2Struct(path+"."+e.Key, e.Val, elemVal)
+				err := unmarshalObject2Struct(path+"."+e.Key, e.Val, elemVal, usectx)
 				if err != nil {
 					return err
 				}
@@ -156,7 +162,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 			key := e.Key
 			val := e.Val
 			elemV := reflect.New(elemT)
-			err := unmarshalObject2Struct(path+"."+key, val, elemV)
+			err := unmarshalObject2Struct(path+"."+key, val, elemV, usectx)
 			if err != nil {
 				return err
 			}
@@ -178,18 +184,24 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 				name = fieldT.Name
 			}
 			if fieldT.Anonymous {
-				err := unmarshalObject2Struct(path+"."+name, in, v.Field(i))
+				err := unmarshalObject2Struct(path+"."+name, in, v.Field(i), usectx)
 				if err != nil {
 					return err
 				}
 				continue
 			}
-			elemV := vmap.Get(name)
+			var elemV interface{}
+			if usectx {
+				elemV = vmap.GetCtx(name)
+			} else {
+				elemV = vmap.Get(name)
+			}
 			var err error
 			if elemV == nil {
+
 				def := fieldT.Tag.Get("default")
 				if def != "" {
-					err = unmarshalObject2Struct(path+"."+name, def, v.Field(i))
+					err = unmarshalObject2Struct(path+"."+name, def, v.Field(i), usectx)
 					if err != nil {
 						return err
 					}
@@ -200,7 +212,17 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 				}
 				continue
 			}
-			err = unmarshalObject2Struct(path+"."+name, elemV, v.Field(i))
+
+			for key, f := range customTagValidator {
+				cv := fieldT.Tag.Get(key)
+				if cv != "" {
+					err = f(path+"."+name, elemV, cv)
+					if err != nil {
+						return fmt.Errorf("'%s' %v", path+"."+name, err)
+					}
+				}
+			}
+			err = unmarshalObject2Struct(path+"."+name, elemV, v.Field(i), usectx)
 			if err != nil {
 				return err
 			}
@@ -266,9 +288,9 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value) error 
 	//	}
 	//	v.Set(arrv.Elem())
 	default:
-		panic("not support :" + v.Kind().String())
+		return fmt.Errorf("%s not support :%v", path, v.Kind().String())
 	}
-	return nil
+	//return nil
 }
 
 func intValueOf(v interface{}) (int64, error) {
