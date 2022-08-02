@@ -1,6 +1,8 @@
 package values
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/seeadoog/ngcfg"
 	"reflect"
@@ -9,13 +11,15 @@ import (
 
 type cfg struct {
 	Addr  *ConsecutiveString `json:"addr"`
-	Size  *ByteSize          `json:"size"`
+	Size  *ByteSize          `json:"size" default:"1k"`
 	Route map[string]struct {
 		ProxyPass string     `json:"proxy_pass"`
 		Cmd       [][]string `json:"cmd"`
 	} `json:"route"`
-	Cops *TagValue[int] `json:"cops"`
-	Dbs  *configMap     `json:"dbs"`
+	Cops      *TagValue[int] `json:"cops"`
+	Dbs       *configMap     `json:"dbs"`
+	Timeout   *Timeduration  `json:"timeout" default:"15m"`
+	Jsonblock string         `json:"jsonblock"`
 }
 
 type configFactory interface {
@@ -104,7 +108,7 @@ var (
 func TestConsecutiveIps_UnmarshalCfg(t *testing.T) {
 	c := &cfg{}
 	err := ngcfg.UnmarshalFromBytes([]byte(`
-addr '1.2.3.4.{5...6}:{7...8}:{12...20}'
+addr '1.2.3.4.{5...6}:{7...8}:{12...20}' '10.1.98.21:{9889...9896}'
 size 2.5m
 
 route /api1 {
@@ -134,6 +138,15 @@ dbs{
 		addr 10.1.87.590
 	}
 }
+timeout1 100ms
+
+jsonblock '
+{
+	"haha":"dsts"
+}
+
+'
+
 `), c)
 	if err != nil {
 		panic(err)
@@ -161,5 +174,13 @@ dbs{
 	fmt.Println(ta)
 
 	fmt.Println(c.Dbs.cfg["asc"])
+	fmt.Println(c.Timeout)
+
+	bs, _ := json.Marshal(c)
+
+	bf := bytes.NewBuffer(nil)
+	json.Indent(bf, bs, "", "    ")
+
+	fmt.Println(bf.String())
 
 }

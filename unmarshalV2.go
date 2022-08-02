@@ -60,7 +60,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 				newV := reflect.New(elemType)
 				err := (newV.Interface().(Unmarshaller)).UnmarshalCfg(path, in)
 				if err != nil {
-					return err
+					return fmt.Errorf("'%s' %w", path, err)
 				}
 				v.Set(newV)
 				return nil
@@ -69,7 +69,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		default:
 			err := v.Interface().(Unmarshaller).UnmarshalCfg(path, in)
 			if err != nil {
-				return err
+				return fmt.Errorf("'%s' %w", path, err)
 			}
 			return nil
 		}
@@ -139,7 +139,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		//}
 		return nil
 	case reflect.String:
-		vv, err := stringValueOf(in)
+		vv, err := StringValueOf(in)
 		if err != nil {
 			return fmt.Errorf("type of %s should be string, but:%v", path, err)
 		}
@@ -294,7 +294,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 }
 
 func intValueOf(v interface{}) (int64, error) {
-	strv, err := stringValueOf(v)
+	strv, err := StringValueOf(v)
 	if err != nil {
 		return 0, err
 	}
@@ -302,7 +302,7 @@ func intValueOf(v interface{}) (int64, error) {
 }
 
 func boolValueOf(v interface{}) (bool, error) {
-	strv, err := stringValueOf(v)
+	strv, err := StringValueOf(v)
 	if err != nil {
 		return false, err
 	}
@@ -317,7 +317,7 @@ func boolValueOf(v interface{}) (bool, error) {
 }
 
 func floatValueOf(v interface{}) (float64, error) {
-	strv, err := stringValueOf(v)
+	strv, err := StringValueOf(v)
 	if err != nil {
 		return 0, err
 	}
@@ -339,7 +339,7 @@ func memCopy(dst, src uintptr, len uintptr) {
 	copy(db, sb)
 }
 
-func stringValueOf(v interface{}) (string, error) {
+func StringValueOf(v interface{}) (string, error) {
 	switch res := v.(type) {
 	case string:
 		return res, nil
@@ -358,4 +358,8 @@ func isTrue(s string) bool {
 		return true
 	}
 	return false
+}
+
+func StringUnmarshal(f func()) {
+
 }

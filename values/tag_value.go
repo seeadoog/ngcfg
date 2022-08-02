@@ -3,6 +3,7 @@
 package values
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -81,6 +82,10 @@ func (ov *TagValue[T]) String() string {
 		sb.WriteString(" ")
 	}
 	return fmt.Sprintf("%v %v", ov.val, sb.String())
+}
+
+func (ov *TagValue[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ov.String())
 }
 
 func valueOfOptionValue(vt interface{}, vv string) (interface{}, error) {

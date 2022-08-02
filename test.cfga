@@ -80,6 +80,44 @@ value:
 object:{
 
     }
+type object
+properties {
+    name {
+        type string any
+        maximum 5
+        minimum 10
+        enum sms-5s atcs gpks
+    }
+    required name kailous
+}
+anyOf {
+   1 {
+         required 1 2 3 4
+   }
+   2 {
 
+         required 4
+   }
+}
 
+matrix {
+    username 123456
+}
+
+pipeline{
+    build_src{
+        image docker.io/docker
+        dockerfile ./abc/abc.docker
+        repo "{{.Username}}"
+    }
+
+    send_email{
+        image docker.io/image
+        commands `
+            ls -lh
+            docker  {{.}}
+
+        `
+    }
+}
 

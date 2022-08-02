@@ -1,9 +1,13 @@
 package ngcfg
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
+	"strings"
+	"text/template"
 )
 
 func Parse(data []byte) (*Elem, error) {
@@ -27,7 +31,37 @@ func UnmarshalCtx(e *Elem, v interface{}) error {
 	if val.Kind() != reflect.Ptr {
 		panic("value must be pointer")
 	}
-	return setObject(e, val, true, "")
+	return unmarshalObject2Struct("", e, val, true)
+}
+
+func UnmarshalWithRendByEnvs(bs []byte, envDefault map[string]string, v interface{}) error {
+	tlp, err := template.New("cfg").Parse(string(bs))
+	if err != nil {
+		return err
+	}
+	bf := bytes.NewBuffer(nil)
+	envs := readEnvs()
+	for key, val := range envDefault {
+		if _, ok := envs[key]; !ok {
+			envs[key] = val
+		}
+	}
+	err = tlp.Execute(bf, envs)
+	if err != nil {
+		return err
+	}
+	return UnmarshalFromBytes(bf.Bytes(), v)
+}
+
+func readEnvs() map[string]string {
+	res := make(map[string]string)
+	for _, s := range os.Environ() {
+		k, v, ok := strings.Cut(s, "=")
+		if ok {
+			res[k] = v
+		}
+	}
+	return res
 }
 
 func UnmarshalFromBytesCtx(data []byte, v interface{}) error {

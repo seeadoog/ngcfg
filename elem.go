@@ -1,6 +1,7 @@
 package ngcfg
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -334,6 +335,49 @@ func (e *Elem) AsArray() ([][]string, error) {
 
 func (e *Elem) Decode(v interface{}) error {
 	return UnmarshalFromElem(e, v)
+}
+
+func (e *Elem) MarshalCfg(depth int) ([]byte, error) {
+	it := e.Iterator()
+	bf := bytes.NewBuffer(nil)
+
+	for it.HasNext() {
+		a := it.Next()
+		v := a.Val
+		k := a.Key
+		bf.Write(pad(depth))
+		bf.WriteString(k)
+		bf.WriteString(" ")
+		switch vv := v.(type) {
+		case []string:
+			for _, s := range vv {
+				bf.WriteString(s)
+				bf.WriteString(" ")
+			}
+		case Marshaller:
+			bf.WriteString("{\n")
+			bs, err := vv.MarshalCfg(depth + 1)
+			if err != nil {
+				return nil, err
+			}
+			bf.Write(bs)
+			bf.WriteString("\n")
+			bf.Write(pad(depth))
+			bf.WriteString("}")
+		default:
+			//fmt.Println("invalidt", reflect.TypeOf(v))
+		}
+		bf.WriteString("\n")
+	}
+	return bf.Bytes(), nil
+}
+
+type Marshaller interface {
+	MarshalCfg(depth int) ([]byte, error)
+}
+
+func pad(i int) []byte {
+	return bytes.Repeat([]byte("\t"), i)
 }
 func boolOf(s string) (bool, error) {
 	switch s {
