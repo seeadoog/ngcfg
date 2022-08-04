@@ -208,7 +208,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 					continue
 				}
 				if isTrue(fieldT.Tag.Get("required")) {
-					return fmt.Errorf("%s is required", path)
+					return fmt.Errorf("%s is required", path+"."+name)
 				}
 				continue
 			}
