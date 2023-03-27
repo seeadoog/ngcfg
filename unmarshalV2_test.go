@@ -3,6 +3,7 @@ package ngcfg
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -114,4 +115,8 @@ gos {{.Gos}}
 		"GOOS": "linux",
 	}, c)
 	fmt.Println(c)
+}
+
+func Test_Str(t *testing.T) {
+	fmt.Println(strings.Cut("abcds,22", ","))
 }

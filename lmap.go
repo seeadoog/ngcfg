@@ -102,6 +102,16 @@ func (m *LinkedMap) Next() *MapElem {
 	return v
 }
 
+func (m *LinkedMap) Delete(k string) {
+	e := m.data[k]
+	if e == nil {
+		return
+	}
+	delete(m.data, k)
+	e.next.pre = e.pre
+	e.pre.next = e.next
+}
+
 type Iterator interface {
 	HasNext() bool
 	Next() *MapElem
@@ -142,29 +152,5 @@ const (
 
 //{"aa":{"cc":"dd"}}
 //func(m *LinkedMap)UnmarshalJSON(b []byte)error{
-//	json.Unmarshal()
-//	status:=statusBegin
-//	for _, c := range b {
-//		key:=make([]byte,0,2)
-//		switch status {
-//		case statusBegin:
-//			switch c {
-//			case '"':
-//				status = stautsInKeyStr
 //
-//			}
-//		case stautsInKeyStr:
-//			if c == '"' {
-//				status = statusValueBeginPre
-//				continue
-//			}
-//			key = append(key, c)
-//		case statusValueBeginPre:
-//			if c==':'{
-//
-//			}
-//		}
-//
-//
-//	}
 //}

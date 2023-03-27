@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-//UnmarshalFromMap 将map 中的值序列化到 struct 中
+// UnmarshalFromMap 将map 中的值序列化到 struct 中
 func UnmarshalFromElem(in *Elem, template interface{}) error {
 	v := reflect.ValueOf(template)
 	if v.Kind() != reflect.Ptr || v.IsNil() {
@@ -179,7 +179,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		}
 		for i := 0; i < t.NumField(); i++ {
 			fieldT := t.Field(i)
-			name := fieldT.Tag.Get("json")
+			name, _, _ := strings.Cut(fieldT.Tag.Get("json"), ",")
 			if name == "" {
 				name = fieldT.Name
 			}

@@ -84,6 +84,9 @@ func (b *ByteSize) Size() int {
 }
 
 func (b *ByteSize) String() string {
+	if b == nil {
+		return ""
+	}
 	return b.raw
 }
 
@@ -117,5 +120,8 @@ func (t *Timeduration) MarshalJSON() ([]byte, error) {
 }
 
 func (t *Timeduration) String() string {
+	if t == nil {
+		return ""
+	}
 	return t.i.String()
 }
