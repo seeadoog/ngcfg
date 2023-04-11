@@ -2,6 +2,7 @@ package ngcfg
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -119,4 +120,26 @@ gos {{.Gos}}
 
 func Test_Str(t *testing.T) {
 	fmt.Println(strings.Cut("abcds,22", ","))
+}
+
+func Test_ENV(t *testing.T) {
+	type Inner struct {
+		Name string `env:"NAME"`
+	}
+	type cfg struct {
+		Name string `env:"NAME"`
+		In   Inner  `json:"in"`
+	}
+	os.Setenv("NAME", "hello world")
+	c := new(cfg)
+	err := UnmarshalFromBytes([]byte(`
+	name dd
+	in {
+		
+	}
+	`), c)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(c)
 }

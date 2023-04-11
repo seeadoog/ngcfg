@@ -2,6 +2,7 @@ package ngcfg
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -199,6 +200,18 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 			var err error
 			if elemV == nil {
 
+				envKey := fieldT.Tag.Get("env")
+				if envKey != "" {
+					envVal := os.Getenv(envKey)
+					if envVal != "" {
+						err = unmarshalObject2Struct(path+"."+name, envVal, v.Field(i), usectx)
+						if err != nil {
+							return err
+						}
+						continue
+					}
+				}
+
 				def := fieldT.Tag.Get("default")
 				if def != "" {
 					err = unmarshalObject2Struct(path+"."+name, def, v.Field(i), usectx)
@@ -208,7 +221,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 					continue
 				}
 				if isTrue(fieldT.Tag.Get("required")) {
-					return fmt.Errorf("%s is required", path+"."+name)
+					return fmt.Errorf("miss field ,'%s' is required", path+"."+name)
 				}
 				continue
 			}
