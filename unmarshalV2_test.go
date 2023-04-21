@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 type Ccstring string
@@ -124,7 +125,9 @@ func Test_Str(t *testing.T) {
 
 func Test_ENV(t *testing.T) {
 	type Inner struct {
-		Name string `env:"NAME"`
+		Name *string       `env:"NAME"`
+		Age  interface{}   `json:"age"`
+		TTL  time.Duration `json:"ttl"`
 	}
 	type cfg struct {
 		Name string `env:"NAME"`
@@ -135,11 +138,18 @@ func Test_ENV(t *testing.T) {
 	err := UnmarshalFromBytes([]byte(`
 	name dd
 	in {
-		
+		age 4
+		ttl 1m10s
 	}
 	`), c)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(c)
+}
+
+func Test_Time(t *testing.T) {
+	a := 5 * time.Second
+
+	fmt.Println(reflect.TypeOf(a))
 }

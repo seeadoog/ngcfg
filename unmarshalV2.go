@@ -2,10 +2,12 @@ package ngcfg
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -16,6 +18,14 @@ func UnmarshalFromElem(in *Elem, template interface{}) error {
 		panic("template value is nil or not pointer")
 	}
 	return unmarshalObject2Struct("", in, v, false)
+}
+
+func UnmarshalFromFile(file string, tlp interface{}) error {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	return UnmarshalFromBytes(data, tlp)
 }
 
 var (
@@ -35,6 +45,10 @@ var (
 func RegisterCustomTagValidator(tagname string, f func(path string, v interface{}, tagV string) error) {
 	customTagValidator[tagname] = f
 }
+
+var (
+	durationType = reflect.TypeOf(time.Duration(0))
+)
 
 func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx bool) error {
 	if in == nil {
@@ -249,6 +263,22 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		}
 		return nil
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+
+		//时间类型
+		if v.Type() == durationType {
+			val, err := StringValueOf(in)
+			if err != nil {
+				return fmt.Errorf("cannot parse '%s' as duration value: '%v' err:%w", path, in, err)
+			}
+
+			d, err := time.ParseDuration(val)
+			if err != nil {
+				return fmt.Errorf("cannot parse '%s' as duration value: '%v' err:%w", path, in, err)
+			}
+			v.SetInt(int64(d))
+			return nil
+		}
+
 		intV, err := intValueOf(in)
 		if err != nil {
 			return err

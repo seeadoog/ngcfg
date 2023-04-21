@@ -8,6 +8,16 @@ import (
 	"strconv"
 )
 
+// type BasicValue []string
+
+// func (b BasicValue) String() string {
+// 	return strings.Join([]string(b), " ")
+// }
+
+// func (b BasicValue)Int()int{
+
+// }
+
 type Elem struct {
 	data   *LinkedMap
 	idx    int
@@ -163,6 +173,16 @@ func (e *Elem) Get(key string) interface{} {
 	return v
 }
 
+func (e *Elem) Range(f func(key string, val interface{}) bool) {
+	it := e.Iterator()
+	for it.HasNext() {
+		ev := it.Next()
+		if !f(ev.Key, ev.Val) {
+			return
+		}
+	}
+}
+
 func (e *Elem) GetCtx(key string) interface{} {
 	v, ok := e.data.Get(key)
 	if !ok {
@@ -177,7 +197,7 @@ func NewElem() *Elem {
 	return &Elem{data: NewLinkedMap()}
 }
 
-//return fist elem of array
+// return fist elem of array
 func (e *Elem) GetString(key string) (string, error) {
 	v, ok := e.data.Get(key)
 	if !ok {
