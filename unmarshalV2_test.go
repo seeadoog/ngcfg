@@ -126,7 +126,7 @@ func Test_Str(t *testing.T) {
 func Test_ENV(t *testing.T) {
 	type Inner struct {
 		Name *string       `env:"NAME"`
-		Age  interface{}   `json:"age"`
+		Age  interface{}   `json:"age" env:"AGE" required:"true"`
 		TTL  time.Duration `json:"ttl"`
 	}
 	type cfg struct {
@@ -138,7 +138,7 @@ func Test_ENV(t *testing.T) {
 	err := UnmarshalFromBytes([]byte(`
 	name dd
 	in {
-		age 4
+		#age 4
 		ttl 1m10s
 	}
 	`), c)
@@ -146,10 +146,4 @@ func Test_ENV(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(c)
-}
-
-func Test_Time(t *testing.T) {
-	a := 5 * time.Second
-
-	fmt.Println(reflect.TypeOf(a))
 }

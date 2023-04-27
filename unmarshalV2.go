@@ -406,3 +406,14 @@ func isTrue(s string) bool {
 func StringUnmarshal(f func()) {
 
 }
+
+/*
+asmsdsd {
+	name string maxLength=15 minLength=22 'enums=1,2,3,4,5,6'
+	status int max=15 min=16
+	acmds {
+
+	}
+}
+
+*/

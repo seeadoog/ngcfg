@@ -13,6 +13,7 @@
 -  支持注释
 -  支持struct模板解析
 -  支持配置继承，配置字段缺失时，可以去父区块寻找相应的字段并获取其值（需要使用UnmarshalFromBytesCtx）
+-  支持从环境变量绑定配置
 #### 配置示例
 ```
 server{
@@ -66,11 +67,11 @@ user{
 `
 
 type User struct{
-    Name string `json:"name" default:"jhon"`
+    Name string `json:"name" default:"jhon"  env:"NAME"`
 }
 
 type Config struct{
-    User User `json:"user"`
+    User User `json:"user" required:"true"`
 }
 
 cfg:=&Config{}
