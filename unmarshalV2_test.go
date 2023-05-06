@@ -2,11 +2,9 @@ package ngcfg
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 type Ccstring string
@@ -56,6 +54,7 @@ e {
 }
 g ttt
 ips "http://10.1.87.{50...59}:8001/ats/traffics"
+
 `)
 	c := &Config{}
 
@@ -86,7 +85,14 @@ func TestMarsha(t *testing.T) {
 	bs := `
 a 5
 name str
+cccc "
+\n
+"
+ab {
 
+}
+
+abc 
 `
 	e, err := Parse([]byte(bs))
 	if err != nil {
@@ -121,29 +127,34 @@ gos {{.Gos}}
 
 func Test_Str(t *testing.T) {
 	fmt.Println(strings.Cut("abcds,22", ","))
+	fmt.Println(reflect.TypeOf(BasicValue{}))
+
 }
 
-func Test_ENV(t *testing.T) {
-	type Inner struct {
-		Name *string       `env:"NAME"`
-		Age  interface{}   `json:"age" env:"AGE" required:"true"`
-		TTL  time.Duration `json:"ttl"`
-	}
-	type cfg struct {
-		Name string `env:"NAME"`
-		In   Inner  `json:"in"`
-	}
-	os.Setenv("NAME", "hello world")
-	c := new(cfg)
-	err := UnmarshalFromBytes([]byte(`
-	name dd
-	in {
-		#age 4
-		ttl 1m10s
-	}
-	`), c)
+type target struct {
+	Weight string `json:"weight,omitempty"`
+}
+type upstream struct {
+	Addr        map[string]target `json:"addr,omitempty"`
+	HashHeaders []string          `json:"hash_headers,omitempty"`
+	HashQueries []string          `json:"hash_queries,omitempty"`
+	HashOn      string            `json:"hash_on,omitempty"`
+}
+
+type nginx struct {
+	Http struct {
+		Upstream *LSMap[*upstream] `json:"upstream,omitempty"`
+		Server   map[string]Server `json:"server,omitempty"`
+	} `json:"http,omitempty"`
+}
+
+func Test_String3(t *testing.T) {
+	var a nginx
+
+	err := UnmarshalFromFile("test.cfga", &a)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(c)
+
+	fmt.Println(a.Http.Upstream.String())
 }

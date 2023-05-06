@@ -3,10 +3,11 @@ package values
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/seeadoog/ngcfg"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/seeadoog/ngcfg"
 )
 
 type ConsecutiveString struct {

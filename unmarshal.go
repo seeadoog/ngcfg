@@ -74,7 +74,7 @@ func UnmarshalFromBytesCtx(data []byte, v interface{}) error {
 
 var structTags = []string{"json"}
 
-//add struct tag for unmarshal
+// add struct tag for unmarshal
 func AddParseTag(tag string) {
 	structTags = append(structTags, tag)
 }

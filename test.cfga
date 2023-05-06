@@ -1,123 +1,58 @@
 
 worker_process 5
 
-server h1{
-    worker_process 10
-}
 
-common {
-}
-
-resource{
-    redis lsa{
-        addrs 232.31.22.22
-    }
-
-    mysql dx{
-
-    }
-
-    mysql hu{
-
-    }
-
-    - {
-        if `a>5 and b > 0`{
+http {
+    server s1  {
+        
+        location '/sms-5s' {
 
         }
-        else{
 
+        location '/apiv2'{
+            proxy_pass http://s1
+        }
+
+        read_timeout 60s
+        write_timeout 60s
+        conn_timeout 100ms
+    }
+
+    server s2 {
+
+    }
+
+    upstream s1 {
+        hash_headers X-Consumer-Username 
+        addr 10.1.87.70 {
+            weight 100
+        }
+
+        addr 10.1.87.69{
+            weight 80
         }
     }
 
-
-}
-
-api /{
-    lua '
-
-
-    '
-
-    java_script `
-     var a = 5
-     var c =6
-
-    `
-}
-
-datas {
-    cmds `
-    ls -lh
-    cd && sh build.sh
-
-    `
-
-}
-
-map golang{
-
-   ls{
-      timeout 5
-   }
-   ls ff{
-
-   }
-
-   ls gg{
-
-   }
-
-}
-
-config:
-    key value
-
-value:
-    string |
-    object
-
-object:{
+    upstream u2 {
 
     }
-type object
-properties {
-    name {
-        type string any
-        maximum 5
-        minimum 10
-        enum sms-5s atcs gpks
-    }
-    required name kailous
-}
-anyOf {
-   1 {
-         required 1 2 3 4
-   }
-   2 {
-
-         required 4
-   }
 }
 
-matrix {
-    username 123456
-}
 
-pipeline{
-    build_src{
-        image docker.io/docker
-        dockerfile ./abc/abc.docker
-        repo "{{.Username}}"
-    }
+tcp {
+    server mysql {
+        listen :80 
+        proxy_pass 
 
-    send_email{
-        image docker.io/image
-        commands `
-            ls -lh
-            docker  {{.}}
-
-        `
     }
 }
 
+
+
+api /api.1 {
+    
+}
+
+api /api.2 {
+
+}

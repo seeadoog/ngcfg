@@ -10,3 +10,7 @@ package ngcfg
 //
 //	}
 //}
+
+type BasicValue = []string
+
+type ObjectValue = Elem

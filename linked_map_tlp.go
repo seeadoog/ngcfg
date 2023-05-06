@@ -2,11 +2,13 @@ package ngcfg
 
 import (
 	"fmt"
-	"github.com/seeadoog/linkedMap"
 	"reflect"
 	"strings"
+
+	"github.com/seeadoog/linkedMap"
 )
 
+// linked map
 type LSMap[V any] struct {
 	l *linkedMap.Map[string, V]
 }

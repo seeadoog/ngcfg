@@ -46,8 +46,12 @@ func RegisterCustomTagValidator(tagname string, f func(path string, v interface{
 	customTagValidator[tagname] = f
 }
 
+type BinarySize int64
+
 var (
 	durationType = reflect.TypeOf(time.Duration(0))
+
+	bytesSizeType = reflect.TypeOf(BinarySize(0))
 )
 
 func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx bool) error {
@@ -279,6 +283,21 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 			return nil
 		}
 
+		if v.Type() == bytesSizeType {
+			val, err := StringValueOf(in)
+			if err != nil {
+				return fmt.Errorf("cannot parse '%s' as BinarySize value: '%v' err:%w", path, in, err)
+			}
+
+			d, err := parseByteSize(val)
+			if err != nil {
+				return fmt.Errorf("cannot parse '%s' as BinarySize value: '%v' err:%w", path, in, err)
+			}
+			v.SetInt(int64(d))
+
+			return nil
+		}
+
 		intV, err := intValueOf(in)
 		if err != nil {
 			return err
@@ -417,3 +436,35 @@ asmsdsd {
 }
 
 */
+
+const (
+	kb = 1024
+	mb = 1024 * kb
+	gb = 1024 * mb
+	tb = 1024 * gb
+)
+
+func parseByteSize(s string) (int, error) {
+	if len(s) == 0 {
+		return 0, fmt.Errorf("invalid byte size:%v", s)
+	}
+	n, err := strconv.ParseFloat(s[:len(s)-1], 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid byte size:%v", s)
+	}
+
+	switch s[len(s)-1] {
+	case 'b', 'B':
+		return int(n), nil
+	case 'k', 'K':
+		return int(n * kb), nil
+	case 'm', 'M':
+		return int(n * mb), nil
+	case 'g', 'G':
+		return int(n * gb), nil
+	case 't', 'T':
+		return int(n * tb), nil
+	default:
+		return 0, fmt.Errorf("invalid byte size:%v", s)
+	}
+}

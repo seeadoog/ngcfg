@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/seeadoog/ngcfg"
+	"os"
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/seeadoog/ngcfg"
 )
 
 type cfg struct {
@@ -183,4 +186,45 @@ jsonblock '
 
 	fmt.Println(bf.String())
 
+}
+
+func Test_ENV(t *testing.T) {
+	type Inner struct {
+		Name *string          `env:"NAME"`
+		Age  interface{}      `json:"age" env:"AGE" required:"true"`
+		TTL  time.Duration    `json:"ttl"`
+		Mem  ngcfg.BinarySize `json:"mem"`
+	}
+	type cfg struct {
+		Name    string `env:"NAME"`
+		In      Inner  `json:"in"`
+		Listens []any  `json:"listen"`
+		Corn    string `json:"corn"`
+	}
+	os.Setenv("NAME", "hello world")
+	c := new(cfg)
+	err := ngcfg.UnmarshalFromBytes([]byte(`
+	name dd
+	in {
+		age 4
+		ttl 1m10s
+		mem 10t
+	}
+
+	listen {
+		- ls -lh 
+		- docker ps |grep 
+		- cd && pwd
+		- {
+			gg 123
+		}
+		
+	}
+	corn 5 * * * * * 
+	
+	`), c)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(c.Listens...)
 }

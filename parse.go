@@ -10,77 +10,78 @@ aad{
 	sffds sdfds
 	dsfs   sdfdsf
 }
- */
+*/
 
-const(
+const (
 	valueLine = iota
 	valueObject
 )
 
 type scanner struct {
-	stack *list.List  // 当前节点保存堆栈
-	tk []byte // 当前token
-	ltks []string  // 当前行 所有token
-	step func(s *scanner,c byte)error // 扫描step
-	cvt int  // 当前值类型
-	line int  // 扫描行
-	rank int  // 扫描列
+	stack *list.List                     // 当前节点保存堆栈
+	tk    []byte                         // 当前token
+	ltks  []string                       // 当前行 所有token
+	step  func(s *scanner, c byte) error // 扫描step
+	cvt   int                            // 当前值类型
+	line  int                            // 扫描行
+	rank  int                            // 扫描列
 }
+
 // 重置行号
-func (s *scanner)setLine(){
+func (s *scanner) setLine() {
 	s.line++
-	s.rank=0
+	s.rank = 0
 }
 
-
-func parse(b []byte)(*Elem,error){
-	b = append(b,'\n')  // 结尾加一个\n
-	sc:=&scanner{
+func parse(b []byte) (*Elem, error) {
+	b = append(b, '\n') // 结尾加一个\n
+	sc := &scanner{
 		stack: list.New(),
-		tk:    make([]byte,0,5),
-		ltks:  make([]string,0,2),
+		tk:    make([]byte, 0, 5),
+		ltks:  make([]string, 0, 2),
 		step:  stepBegin,
 		cvt:   valueLine,
-		line:1,
-		rank:0,
+		line:  1,
+		rank:  0,
 	}
 	sc.stack.PushBack(NewElem())
 	for _, v := range b {
-		sc.rank ++
-		if err:=sc.step(sc,v);err !=nil{
-			return nil,err
+		sc.rank++
+		if err := sc.step(sc, v); err != nil {
+			return nil, err
 		}
 	}
 
-	if sc.stack.Len() != 1{
-		return nil,fmt.Errorf("'}' does not match '{'")
+	if sc.stack.Len() != 1 {
+		return nil, fmt.Errorf("'}' does not match '{' , may need '}' at end of config file")
 	}
-	return sc.stack.Front().Value.(*Elem),nil
+	return sc.stack.Front().Value.(*Elem), nil
 }
 
-//}
-func stepObEnd(s *scanner)error{
-	if s.stack.Len() <=1{
-		return fmt.Errorf("invalid end '}':at line:%d rank:%d",s.line,s.rank)
+// }
+func stepObEnd(s *scanner) error {
+	if s.stack.Len() <= 1 {
+		return fmt.Errorf("invalid end '}':at line:%d : %d", s.line, s.rank)
 	}
 	s.cvt = valueObject
 	s.stack.Remove(s.stack.Back())
 	s.step = stepEndOb
 	return nil
 }
-//ssss
-func stepBegin(s *scanner,c byte)error{
-	if isSpace(c){
+
+// ssss
+func stepBegin(s *scanner, c byte) error {
+	if isSpace(c) {
 		return nil
 	}
 	switch c {
 	case '{':
-		return fmt.Errorf("invalid begin value:'{', line:%d,rank:%d",s.line,s.rank)
+		return fmt.Errorf("invalid begin value:'{', line:%d : %d", s.line, s.rank)
 	case '#':
 		s.step = stepAnno
 		return nil
-	case '\r','\n':
-		if c=='\n'{
+	case '\r', '\n':
+		if c == '\n' {
 			s.setLine()
 		}
 		return nil
@@ -100,13 +101,13 @@ func stepBegin(s *scanner,c byte)error{
 		return nil
 	}
 	s.cvt = valueLine
-	s.tk = append(s.tk,c)
+	s.tk = append(s.tk, c)
 	s.step = stepContinue
 	return nil
 }
 
-func stepEndOb(s *scanner,c byte)error{
-	if isSpace(c){
+func stepEndOb(s *scanner, c byte) error {
+	if isSpace(c) {
 		return nil
 	}
 	switch c {
@@ -119,23 +120,22 @@ func stepEndOb(s *scanner,c byte)error{
 	case '\n':
 		return stepEscap2(s)
 	}
-	return fmt.Errorf("invalid c after '}',line:%d rank:%d",s.line,s.rank)
+	return fmt.Errorf("invalid  character '%s' after '}',line:%d : %d", string(c), s.line, s.rank)
 }
 
-func isSpace(c byte)bool{
-	return c == ' ' || c =='\t'
+func isSpace(c byte) bool {
+	return c == ' ' || c == '\t'
 }
 
-
-func appendLine(s *scanner){
-	if len(s.tk) >0{
-		s.ltks = append(s.ltks,string(s.tk))
+func appendLine(s *scanner) {
+	if len(s.tk) > 0 {
+		s.ltks = append(s.ltks, string(s.tk))
 		s.tk = s.tk[:0]
 	}
 }
 
-//weewr{
-func stepContinue(s *scanner,c byte)error{
+// weewr{
+func stepContinue(s *scanner, c byte) error {
 	switch c {
 	case '#':
 		appendLine(s)
@@ -147,24 +147,24 @@ func stepContinue(s *scanner,c byte)error{
 	case '\n':
 		return stepEscap2(s)
 	case '}':
-		  return fmt.Errorf("invalid '}' at start block line:%d,rank:%d",s.line,s.rank)
+		return fmt.Errorf("invalid '}' at start block line:%d : %d", s.line, s.rank)
 	case '{':
 		s.cvt = valueObject
-		e:=NewElem()
-		tope:=s.stack.Back().Value.(*Elem)
+		e := NewElem()
+		tope := s.stack.Back().Value.(*Elem)
 		appendLine(s)
-		if len(s.ltks)>2 || len(s.ltks)==0{
-			return fmt.Errorf("invalid begin value of '{',keys too much or less,at line:%d,rank:%d",s.line,s.rank)
+		if len(s.ltks) > 2 || len(s.ltks) == 0 {
+			return fmt.Errorf("invalid begin value of '{',keys too much or less,at line:%d : %d", s.line, s.rank)
 		}
-		if len(s.ltks)==1{
-			key:= s.ltks[0]
-			if err:=tope.Set(key,e);err != nil{
+		if len(s.ltks) == 1 {
+			key := s.ltks[0]
+			if err := tope.Set(key, e); err != nil {
 				return err
 			}
-		}else{
-			key:=s.ltks[0]
+		} else {
+			key := s.ltks[0]
 			subKey := s.ltks[1]
-			if err:=tope.SetSub(key,subKey,e);err != nil{
+			if err := tope.SetSub(key, subKey, e); err != nil {
 				return err
 			}
 		}
@@ -187,86 +187,97 @@ func stepContinue(s *scanner,c byte)error{
 		s.step = stepInstring3
 		return nil
 	}
-	if isSpace(c){
-		if len(s.tk) >0{
-			s.ltks = append(s.ltks,string(s.tk))
+	if isSpace(c) {
+		if len(s.tk) > 0 {
+			s.ltks = append(s.ltks, string(s.tk))
 			s.tk = s.tk[:0]
 		}
-	}else{
-		s.tk = append(s.tk,c)
+	} else {
+		s.tk = append(s.tk, c)
 	}
 	s.step = stepContinue
 	return nil
 }
 
-//" " 类型的string
-func stepInstring(s *scanner,c byte)error{
-	if c == '\n'{
+// " " 类型的string
+func stepInstring(s *scanner, c byte) error {
+	if c == '\n' {
 		s.setLine()
 	}
-	if c == '\\'{
+	if c == '\\' {
 		s.step = stepEcpNext
 		return nil
 	}
 
-	if c == '"'{
-		s.step =stepContinue
+	if c == '"' {
+		s.step = stepContinue
 		return nil
 	}
-	s.tk = append(s.tk,c)
+	s.tk = append(s.tk, c)
 	return nil
 }
+
 // ' ' 类型的string
-func stepInstring2(s *scanner,c byte)error{
-	if c == '\n'{
+func stepInstring2(s *scanner, c byte) error {
+	if c == '\n' {
 		s.setLine()
 	}
-	if c == '\\'{
+	if c == '\\' {
 		s.step = stepEcpNext2
 		return nil
 	}
 
-	if c == '\''{
-		s.step =stepContinue
+	if c == '\'' {
+		s.step = stepContinue
 		return nil
 	}
-	s.tk = append(s.tk,c)
+	s.tk = append(s.tk, c)
 	return nil
 }
 
-func stepInstring3(s *scanner,c byte)error{
-	if c == '\n'{
+func stepInstring3(s *scanner, c byte) error {
+	if c == '\n' {
 		s.setLine()
 	}
-	if c == '`'{
-		s.step =stepContinue
+
+	if c == '\\' {
+		s.step = stepEcpNext3
 		return nil
 	}
-	s.tk = append(s.tk,c)
+
+	if c == '`' {
+		s.step = stepContinue
+		return nil
+	}
+	s.tk = append(s.tk, c)
 	return nil
 }
 
-func stepEcpNext(s *scanner,c byte)error{
-	s.tk = append(s.tk,c)
-	s.step =stepInstring
+func stepEcpNext(s *scanner, c byte) error {
+	s.tk = append(s.tk, c)
+	s.step = stepInstring
 	return nil
 }
-func stepEcpNext2(s *scanner,c byte)error{
-	s.tk = append(s.tk,c)
-	s.step =stepInstring2
+func stepEcpNext2(s *scanner, c byte) error {
+	s.tk = append(s.tk, c)
+	s.step = stepInstring2
 	return nil
 }
 
+func stepEcpNext3(s *scanner, c byte) error {
+	s.tk = append(s.tk, c)
+	s.step = stepInstring3
+	return nil
+}
 
-
-//忽略当前换行符，应对配置行过长的情况
-func stepEcpSep(s *scanner,c byte)error{
-	if isSpace(c){
+// 忽略当前换行符，应对配置行过长的情况
+func stepEcpSep(s *scanner, c byte) error {
+	if isSpace(c) {
 		return nil
 	}
 	switch c {
-	case '\r','\n':
-		if c=='\n'{
+	case '\r', '\n':
+		if c == '\n' {
 			s.setLine()
 			s.step = stepContinue
 		}
@@ -276,15 +287,15 @@ func stepEcpSep(s *scanner,c byte)error{
 		//if err:=stepContinue(s,c);err !=nil{
 		//	return err
 		//}
-		return fmt.Errorf("invalid c after \\ ,line:%d,rank:%d",s.line,s.rank)
+		return fmt.Errorf("invalid character '%s' after \\ ,line:%d : %d", string(c), s.line, s.rank)
 		//s.step = stepContinue
 	}
 	return nil
 }
 
-//{ ....\r\n
-func stepStartObject(s *scanner,c byte)error{
-	if isSpace(c){
+// { ....\r\n
+func stepStartObject(s *scanner, c byte) error {
+	if isSpace(c) {
 		return nil
 	}
 	switch c {
@@ -297,45 +308,45 @@ func stepStartObject(s *scanner,c byte)error{
 	case '\n':
 		return stepEscap2(s)
 	}
-	return fmt.Errorf("invalid c after '{' in start object block ,at:line%d,rank:%d", s.line,s.rank)
+	return fmt.Errorf("invalid character '%s' after '{' in start object block ,at:line %d :%d", string(c), s.line, s.rank)
 }
 
-func stepAnno(s *scanner,c byte)error{
-	if c == '\r'{
+func stepAnno(s *scanner, c byte) error {
+	if c == '\r' {
 		s.step = stepEscap1
-	}else if c == '\n'{
+	} else if c == '\n' {
 		return stepEscap2(s)
 	}
 	return nil
 }
 
-//\r
-func stepEscap1(s *scanner,c byte)error{
-	if c == '\n'{
+// \r
+func stepEscap1(s *scanner, c byte) error {
+	if c == '\n' {
 		return stepEscap2(s)
-	}else{
+	} else {
 		return fmt.Errorf("invald line sep")
 	}
 }
 
-func stepEscap2(s *scanner)error{
+func stepEscap2(s *scanner) error {
 	s.setLine()
-	if s.cvt == valueObject{
+	if s.cvt == valueObject {
 		s.step = stepBegin
 		s.ltks = []string{}
 		return nil
-	}else{
-		if len(s.tk) >0{
-			s.ltks = append(s.ltks,string(s.tk))
+	} else {
+		if len(s.tk) > 0 {
+			s.ltks = append(s.ltks, string(s.tk))
 			s.tk = s.tk[:0]
 		}
-		if len(s.ltks) >0{
-			if s.stack.Len() ==0{
+		if len(s.ltks) > 0 {
+			if s.stack.Len() == 0 {
 				return fmt.Errorf("invalid stack")
 			}
-			tope:=s.stack.Back().Value.(*Elem)
-			err:=tope.Set(s.ltks[0],s.ltks[1:])
-			if err != nil{
+			tope := s.stack.Back().Value.(*Elem)
+			err := tope.Set(s.ltks[0], s.ltks[1:])
+			if err != nil {
 				return err
 			}
 		}
@@ -345,4 +356,3 @@ func stepEscap2(s *scanner)error{
 	}
 	return nil
 }
-
