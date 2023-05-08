@@ -78,7 +78,7 @@ type ListenOpt struct{
 }
 type Config struct{
     User User `json:"user" required:"true"`
-    Listen values.TagValueT[string,]
+    Listen values.TagValueT[string,ListenOpt]
 }
 
 cfg:=&Config{}
