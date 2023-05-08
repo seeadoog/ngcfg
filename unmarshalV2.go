@@ -350,7 +350,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 	//	}
 	//	v.Set(arrv.Elem())
 	default:
-		return fmt.Errorf("%s not support :%v", path, v.Kind().String())
+		return fmt.Errorf("'%s' not support :%v", path, v.Kind().String())
 	}
 	//return nil
 }
@@ -369,9 +369,9 @@ func boolValueOf(v interface{}) (bool, error) {
 		return false, err
 	}
 	switch strv {
-	case "on", "true", "1", "yes", "ok":
+	case "on", "true", "1", "yes", "ok", "":
 		return true, nil
-	case "off", "false", "0":
+	case "off", "false", "0", "never", "no":
 		return false, nil
 	default:
 		return strconv.ParseBool(strv)
@@ -411,12 +411,11 @@ func StringValueOf(v interface{}) (string, error) {
 	default:
 		return "", fmt.Errorf("value is not string:%v %v", v, reflect.TypeOf(v))
 	}
-
 }
 
 func isTrue(s string) bool {
 	switch s {
-	case "1", "true", "True":
+	case "1", "true", "True", "t":
 		return true
 	}
 	return false
@@ -427,9 +426,13 @@ func StringUnmarshal(f func()) {
 }
 
 /*
+
 asmsdsd {
+
 	name string maxLength=15 minLength=22 'enums=1,2,3,4,5,6'
+
 	status int max=15 min=16
+
 	acmds {
 
 	}

@@ -21,6 +21,7 @@ server{
     # listen addrs 
     listen  0.0.0.0:8000 0.0.0.0:8001 0.0.0.0:8002 \
             0.0.0.0:8003 0.0.0.0:8004 0.0.0.0:8005
+    listen_tcp :8932 ssl backlog=10240 reuseport
     
     access_by_lua "
         ngx.log.info('access',\"user\")
@@ -63,15 +64,21 @@ cfg:=`
 user{
     name ssss
 }
+listen :80 ssl 
 
 `
 
 type User struct{
     Name string `json:"name" default:"jhon"  env:"NAME"`
 }
-
+type ListenOpt struct{
+    Ssl bool `json:"ssl"`
+    Reuseport bool `json:"reuseport"`
+    Backlog int `json:"backlog" default:"10240"`
+}
 type Config struct{
     User User `json:"user" required:"true"`
+    Listen values.TagValueT[string,]
 }
 
 cfg:=&Config{}

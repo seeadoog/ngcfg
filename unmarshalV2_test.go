@@ -134,6 +134,7 @@ func Test_Str(t *testing.T) {
 type target struct {
 	Weight string `json:"weight,omitempty"`
 }
+
 type upstream struct {
 	Addr        map[string]target `json:"addr,omitempty"`
 	HashHeaders []string          `json:"hash_headers,omitempty"`

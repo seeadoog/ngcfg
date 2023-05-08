@@ -8,11 +8,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/seeadoog/ngcfg"
 )
 
-type ValueTypes interface {
-	string | int | int64 | bool | float64
-}
+type ValueTypes any
 
 type TagValue[T ValueTypes] struct {
 	val     T
@@ -55,12 +55,12 @@ func (ov *TagValue[T]) GetTag(key string) string {
 	return ov.options[key]
 }
 
-func (ov *TagValue[T]) GetTagOf(key string) (v string, ok bool) {
+func (ov *TagValue[T]) LookUpTag(key string) (v string, ok bool) {
 	v, ok = ov.options[key]
 	return
 }
 
-func (ov *TagValue[T]) GetBool(key string) bool {
+func (ov *TagValue[T]) GetTagBool(key string) bool {
 	v, ok := ov.options[key]
 	if ok {
 		switch v {
@@ -71,6 +71,42 @@ func (ov *TagValue[T]) GetBool(key string) bool {
 		}
 	}
 	return false
+}
+
+func (ov *TagValue[T]) GetTagInt(key string) (int, error) {
+	v := ov.options[key]
+	if v == "" {
+		return 0, fmt.Errorf("'%s' empty value", key)
+	}
+	va, err := strconv.Atoi(key)
+	if err != nil {
+		return 0, fmt.Errorf("get tag as  int error , key %s ,val %v err:%w", key, v, err)
+	}
+	return va, nil
+}
+
+func (ov *TagValue[T]) GetTagFloat(key string) (float64, error) {
+	v := ov.options[key]
+	if v == "" {
+		return 0, fmt.Errorf("'%s' empty value", key)
+	}
+	va, err := strconv.ParseFloat(key, 64)
+	if err != nil {
+		return 0, fmt.Errorf("get tag as  float  error , key %s ,val %v err:%w", key, v, err)
+	}
+	return va, nil
+}
+
+func (ov *TagValue[T]) GetTagUint(key string) (uint, error) {
+	v := ov.options[key]
+	if v == "" {
+		return 0, fmt.Errorf("'%s' empty value", key)
+	}
+	va, err := strconv.ParseUint(key, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("get tag as  uint  error , key %s ,val %v err:%w", key, v, err)
+	}
+	return uint(va), nil
 }
 
 func (ov *TagValue[T]) String() string {
@@ -104,4 +140,47 @@ func valueOfOptionValue(vt interface{}, vv string) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("unsupport type of TagValue :%v", reflect.TypeOf(vt))
 	}
+}
+
+type TagValueT[Val any, Tag any] struct {
+	values *TagValue[Val]
+	tag    *Tag
+}
+
+func (t *TagValueT[Val, Tag]) Val() Val {
+	return t.values.val
+}
+
+func (t *TagValueT[Val, Tag]) Tag() *Tag {
+	return t.tag
+}
+
+func (t *TagValueT[Val, Tag]) UnmarshalCfg(path string, v any) error {
+	t.values = new(TagValue[Val])
+	err := t.values.UnmarshalCfg(path, v)
+	if err != nil {
+		return err
+	}
+
+	e := ngcfg.NewElem()
+
+	for key, v2 := range t.values.options {
+		switch v2 {
+		case "":
+			e.Set(key, []string{})
+		default:
+			e.Set(key, []string{v2})
+		}
+
+	}
+	t.tag = new(Tag)
+	return e.Decode(t.tag)
+}
+
+func (t *TagValueT[Val, Tag]) String() string {
+	return t.values.String()
+}
+
+func (t *TagValueT[Val, Tag]) MarshalJSON() (b []byte, err error) {
+	return t.values.MarshalJSON()
 }

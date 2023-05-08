@@ -13,16 +13,24 @@ import (
 )
 
 type cfg struct {
-	Addr  *ConsecutiveString `json:"addr"`
-	Size  *ByteSize          `json:"size" default:"1k"`
-	Route map[string]struct {
+	Addr        *ConsecutiveString `json:"addr"`
+	EnableBitch bool               `json:"enable_bitch"`
+	Size        *ByteSize          `json:"size" default:"1k"`
+	Route       map[string]struct {
 		ProxyPass string     `json:"proxy_pass"`
 		Cmd       [][]string `json:"cmd"`
 	} `json:"route"`
-	Cops      *TagValue[int] `json:"cops"`
-	Dbs       *configMap     `json:"dbs"`
-	Timeout   *Timeduration  `json:"timeout" default:"15m"`
-	Jsonblock string         `json:"jsonblock"`
+	Cops      *TagValue[int]                    `json:"cops"`
+	Dbs       *configMap                        `json:"dbs"`
+	Timeout   *Timeduration                     `json:"timeout" default:"15m"`
+	Jsonblock string                            `json:"jsonblock"`
+	Listen    *TagValueT[string, ListenOptions] `json:"listen" required:"t"`
+}
+
+type ListenOptions struct {
+	SSL       bool `json:"ssl,omitempty" default:"t"`
+	BackLog   int  `json:"back_log,omitempty" default:"1024"`
+	Reuseport bool `json:"reuseport,omitempty"`
 }
 
 type configFactory interface {
@@ -132,7 +140,7 @@ route /api2{
 
 }
 
-cops 14 name=5 age=7
+cops 14 name=goog age=7 ssl 
 
 dbs{
 	asc {
@@ -149,6 +157,10 @@ jsonblock '
 }
 
 '
+
+enable_bitch 
+
+listen :80 ssl back_log1=105 reuseport
 
 `), c)
 	if err != nil {
@@ -185,6 +197,8 @@ jsonblock '
 	json.Indent(bf, bs, "", "    ")
 
 	fmt.Println(bf.String())
+
+	fmt.Println(c.Listen.Tag())
 
 }
 
