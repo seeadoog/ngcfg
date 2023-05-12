@@ -1,58 +1,28 @@
-
-worker_process 5
-
-
-http {
-    server s1  {
-        
-        location '/sms-5s' {
+{
+    "type":"object",
+    "switch":"method",
+    "case":{
+        "get":{
+                "properties":{
+                    "get_1":{
+                        "type":"string"
+                    }
+                }   
+        },
+        "post":{
+                "properties":{
+                    "post_1":{
+                        "type":"string"
+                    },
+                     "post_2":{
+                        "type":"string"
+                    }
+                }   
+            }
 
         }
-
-        location '/apiv2'{
-            proxy_pass http://s1
-        }
-
-        read_timeout 60s
-        write_timeout 60s
-        conn_timeout 100ms
+    },
+    "default":{
+        "error":"not support method : '${method}'"
     }
-
-    server s2 {
-
-    }
-
-    upstream s1 {
-        hash_headers X-Consumer-Username 
-        addr 10.1.87.70 {
-            weight 100
-        }
-
-        addr 10.1.87.69{
-            weight 80
-        }
-    }
-
-    upstream u2 {
-
-    }
-}
-
-
-tcp {
-    server mysql {
-        listen :80 
-        proxy_pass 
-
-    }
-}
-
-
-
-api /api.1 {
-    
-}
-
-api /api.2 {
-
 }

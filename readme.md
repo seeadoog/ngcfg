@@ -66,6 +66,30 @@ user{
 }
 listen :80 ssl 
 
+tags {
+    a a
+    b b
+}
+
+cmds {
+    - ls -lh
+    - pwd && ls
+}
+
+users {
+    - {
+        name aaaa
+    }
+    - {
+        name bbbb
+    }
+}
+
+user_map {
+    aaa {
+        name aaaaa
+    }
+}
 `
 
 type User struct{
@@ -78,7 +102,11 @@ type ListenOpt struct{
 }
 type Config struct{
     User User `json:"user" required:"true"`
-    Listen values.TagValueT[string,ListenOpt]
+    Listen *values.TagValueT[string,ListenOpt] `json:"listen"`
+    Tags map[string]string `json:"tags"`
+    Cmds []string `json:"cmds"`
+    Users []*User `json:"users"`
+    UserMap []*User `json:"user_map"`
 }
 
 cfg:=&Config{}
