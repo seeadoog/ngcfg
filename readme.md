@@ -106,7 +106,7 @@ type Config struct{
     Tags map[string]string `json:"tags"`
     Cmds []string `json:"cmds"`
     Users []*User `json:"users"`
-    UserMap []*User `json:"user_map"`
+    UserMap map[string]*User `json:"user_map"`
 }
 
 cfg:=&Config{}
