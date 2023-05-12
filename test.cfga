@@ -1,28 +1,24 @@
-{
-    "type":"object",
-    "switch":"method",
-    "case":{
-        "get":{
-                "properties":{
-                    "get_1":{
-                        "type":"string"
-                    }
-                }   
-        },
-        "post":{
-                "properties":{
-                    "post_1":{
-                        "type":"string"
-                    },
-                     "post_2":{
-                        "type":"string"
-                    }
-                }   
-            }
+go.envs {
+    GOMODULES on 
+    GO_LL off 
+}
 
-        }
-    },
-    "default":{
-        "error":"not support method : '${method}'"
-    }
+dependencies{
+    github.com v1.0.0.0
+    toml.com v1.1.1
+}
+
+build {
+    - go build -o application
+
+}
+
+task {
+    image golang:1.0.0
+
+}
+
+upstream {
+    10.1.87.70:8001 on weight=50
+    10.1.87.69:8001 off weight=100
 }
