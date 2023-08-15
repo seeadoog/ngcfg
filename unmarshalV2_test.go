@@ -1,7 +1,9 @@
 package ngcfg
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -150,12 +152,19 @@ type nginx struct {
 }
 
 func Test_String3(t *testing.T) {
-	var a nginx
+	var a *Elem
 
 	err := UnmarshalFromFile("test.cfga", &a)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(a.Http.Upstream.String())
+	fmt.Println(a)
+
+	j := json.NewEncoder(os.Stdout)
+	j.SetIndent("", "\t")
+	j.SetEscapeHTML(false)
+	j.Encode(a)
+
+	fmt.Println(int('\t'), int(' '))
 }

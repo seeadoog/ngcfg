@@ -25,6 +25,8 @@ type scanner struct {
 	cvt   int                            // 当前值类型
 	line  int                            // 扫描行
 	rank  int                            // 扫描列
+	preC  byte
+	nextC byte
 }
 
 // 重置行号
@@ -45,8 +47,15 @@ func parse(b []byte) (*Elem, error) {
 		rank:  0,
 	}
 	sc.stack.PushBack(NewElem())
-	for _, v := range b {
+	for i, v := range b {
 		sc.rank++
+		if i > 0 {
+			sc.preC = b[i-1]
+		}
+		if i+1 < len(b) {
+			sc.nextC = b[i+1]
+		}
+
 		if err := sc.step(sc, v); err != nil {
 			return nil, err
 		}
@@ -134,13 +143,16 @@ func appendLine(s *scanner) {
 	}
 }
 
-// weewr{
+// weewr{#jjdsinvalid character '
 func stepContinue(s *scanner, c byte) error {
 	switch c {
 	case '#':
-		appendLine(s)
-		s.step = stepAnno
-		return nil
+		if in(s.preC, ' ', 0, '\n', '\t', '\r') {
+			appendLine(s)
+			s.step = stepAnno
+			return nil
+		}
+
 	case '\r':
 		s.step = stepEscap1
 		return nil
@@ -149,6 +161,7 @@ func stepContinue(s *scanner, c byte) error {
 	case '}':
 		return fmt.Errorf("invalid '}' at start block line:%d : %d", s.line, s.rank)
 	case '{':
+
 		s.cvt = valueObject
 		e := NewElem()
 		tope := s.stack.Back().Value.(*Elem)
@@ -211,6 +224,8 @@ func stepInstring(s *scanner, c byte) error {
 
 	if c == '"' {
 		s.step = stepContinue
+		s.ltks = append(s.ltks, string(s.tk))
+		s.tk = s.tk[:0]
 		return nil
 	}
 	s.tk = append(s.tk, c)
@@ -229,6 +244,8 @@ func stepInstring2(s *scanner, c byte) error {
 
 	if c == '\'' {
 		s.step = stepContinue
+		s.ltks = append(s.ltks, string(s.tk))
+		s.tk = s.tk[:0]
 		return nil
 	}
 	s.tk = append(s.tk, c)
@@ -247,6 +264,8 @@ func stepInstring3(s *scanner, c byte) error {
 
 	if c == '`' {
 		s.step = stepContinue
+		s.ltks = append(s.ltks, string(s.tk))
+		s.tk = s.tk[:0]
 		return nil
 	}
 	s.tk = append(s.tk, c)
@@ -355,4 +374,13 @@ func stepEscap2(s *scanner) error {
 		s.ltks = []string{}
 	}
 	return nil
+}
+
+func in[T comparable](a T, arr ...T) bool {
+	for _, v := range arr {
+		if v == a {
+			return true
+		}
+	}
+	return false
 }

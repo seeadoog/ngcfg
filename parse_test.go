@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
-/**
+/*
+*
 aa bb
 cc dd
 */
@@ -411,8 +413,11 @@ func TestFile(t *testing.T) {
 // 1 core   3000000 goroutines per seconds
 func TestDefault(t *testing.T) {
 	type Base struct {
-		GG string `json:"gg"`
-		EE string `json:"ee"`
+		GG  string            `json:"gg"`
+		EE  string            `json:"ee"`
+		Map map[string]string `json:"map"`
+
+		Strs []string `json:"strs"`
 	}
 
 	type Cfg struct {
@@ -425,8 +430,12 @@ func TestDefault(t *testing.T) {
 	}
 
 	cfgs := `
-gg 688
+'gg' '688'
 name 5
+map {
+	'' qw
+}
+strs '' "" sdfd
 swa{
 nae 5
 }
@@ -436,6 +445,10 @@ nae 5
 	if err != nil {
 		panic(err)
 	}
+
+	j := json.NewEncoder(os.Stderr)
+	j.SetIndent("", "\t")
+	j.Encode(v)
 	fmt.Println(v.GG)
 
 	//tp:=reflect.TypeOf(*v)

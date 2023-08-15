@@ -19,6 +19,23 @@ task {
 }
 
 upstream {
-    10.1.87.70:8001 on weight=50
-    10.1.87.69:8001 off weight=100
+    10.1.87.70:8001 on weight=50 slots=50
+    10.1.87.69:8001 off weight=100 
 }
+
+redis {
+    10.1.87.70:8001 on weight=50 slots=50
+    10.1.87.69:8001 off weight=100 
+}
+#dddddddddddd
+schema {
+    #ffllff
+    namespace string maxLength=100 'regexp=^[a-zA-Z0-9]{1,5}$' #dddd
+    children array#ddddddd
+    password 134566!@   #
+    children->items {
+        name string 
+        ages int|float 
+    }
+}
+

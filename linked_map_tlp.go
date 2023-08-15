@@ -69,7 +69,7 @@ func (l *LSMap[V]) UnmarshalCfg(path string, val interface{}) error {
 	case nil:
 		return nil
 	}
-	return fmt.Errorf("cannot unmashal %s to LSMap", reflect.TypeOf(val))
+	return fmt.Errorf("cannot unmarshal %s to LSMap", reflect.TypeOf(val))
 }
 
 func (l *LSMap[V]) MarshalJSON() ([]byte, error) {
