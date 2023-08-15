@@ -418,6 +418,8 @@ func TestDefault(t *testing.T) {
 		Map map[string]string `json:"map"`
 
 		Strs []string `json:"strs"`
+
+		Map2 map[string]*Base `json:"map2"`
 	}
 
 	type Cfg struct {
@@ -435,7 +437,16 @@ name 5
 map {
 	'' qw
 }
-strs '' "" sdfd
+
+map2 {
+	'' {
+		gg map2
+	}
+	' ' {
+		gg 'lll'
+	}
+}
+strs '' "" sdfd    'sdfd'   ds 'fsdf' dsdd
 swa{
 nae 5
 }
