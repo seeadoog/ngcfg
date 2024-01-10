@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // type BasicValue []string
@@ -35,6 +36,10 @@ func (e *Elem) MarshalJSON() ([]byte, error) {
 }
 
 func (e *Elem) Set(k string, v interface{}) error {
+	// ignore key start with ---
+	if strings.HasPrefix(k, "---") {
+		return nil
+	}
 	_, ok := e.data.Get(k)
 	if ok {
 		return fmt.Errorf("%s key has already defined", k)

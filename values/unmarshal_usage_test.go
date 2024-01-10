@@ -242,3 +242,23 @@ func Test_ENV(t *testing.T) {
 	}
 	fmt.Println(c.Listens...)
 }
+
+func Test_Options(t *testing.T) {
+	type Opt struct {
+		Weight int     `json:"weight"`
+		Prio   float64 `json:"prio"`
+	}
+	type O struct {
+		Targets map[string]Options[Opt] `json:"targets"`
+	}
+
+	o := new(O)
+	err := ngcfg.UnmarshalFromBytes([]byte(`
+	targets {
+		1.1.1.1 weight=5 prio=4
+		2.2.2.2 weight=40 prio=4e3 svcns
+	}
+	`), o)
+
+	fmt.Println(*o, err)
+}

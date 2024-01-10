@@ -344,7 +344,7 @@ func stepEscap1(s *scanner, c byte) error {
 	if c == '\n' {
 		return stepEscap2(s)
 	} else {
-		return fmt.Errorf("invald line sep")
+		return fmt.Errorf("invalid line sep")
 	}
 }
 

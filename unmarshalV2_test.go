@@ -45,9 +45,9 @@ d {
 	redis ggggg
 }
 f {
-	name ffff
-	ggg ghhh
-	kbmncfg {
+	---name ffff
+	---ggg ghhh
+	---kbmncfg {
 			ddd ggg
 	}
 }
@@ -55,7 +55,7 @@ e {
 	dd dd
 }
 g ttt
-ips "http://10.1.87.{50...59}:8001/ats/traffics"
+ips http://172.21.157.[13,14,88-98]:8080
 
 `)
 	c := &Config{}
@@ -71,15 +71,13 @@ ips "http://10.1.87.{50...59}:8001/ats/traffics"
 		panic(err)
 	}
 
+	bs, _ := json.Marshal(c)
+	fmt.Println(string(bs))
 	fmt.Println(reflect.TypeOf(c.D))
 
 	fmt.Println(c.F)
 	fmt.Println(c.E)
 	fmt.Println(reflect.TypeOf((Ccstring("x"))).Implements(unmarshalType))
-
-	cc, _ := e.MarshalCfg(0)
-
-	fmt.Println(string(cc))
 
 }
 
@@ -167,4 +165,22 @@ func Test_String3(t *testing.T) {
 	j.Encode(a)
 
 	fmt.Println(int('\t'), int(' '))
+}
+
+type jsono struct {
+	Name string `json:"name,omitempty,global"`
+}
+
+func Test_jo(t *testing.T) {
+	n := jsono{
+		Name: "xx",
+	}
+	ns, err := json.Marshal(n)
+	fmt.Println(string(ns), err)
+
+	n2 := new(jsono)
+
+	err = json.Unmarshal(ns, n2)
+	fmt.Println(n2, err)
+
 }

@@ -115,6 +115,19 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 	case reflect.Slice:
 		//arr, ok := in.(*Elem)
 		t := v.Type()
+		if t == rangedStringType {
+			vs, err := StringsValueOf(in)
+			if err != nil {
+				return fmt.Errorf("%s RangedString type .value should be []string{}", path)
+			}
+			expandedSs, err := parseRangeIps2(vs)
+			if err != nil {
+				return fmt.Errorf("%s parse as RangedString failed:%v", path, vs)
+			}
+			v.Set(reflect.ValueOf(expandedSs))
+			return nil
+
+		}
 
 		switch arr := in.(type) {
 		case []string:
@@ -198,7 +211,8 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		}
 		for i := 0; i < t.NumField(); i++ {
 			fieldT := t.Field(i)
-			name, _, _ := strings.Cut(fieldT.Tag.Get("json"), ",")
+			jt := fieldT.Tag.Get("json")
+			name, options, _ := strings.Cut(jt, ",")
 			if name == "" {
 				name = fieldT.Name
 			}
@@ -210,7 +224,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 				continue
 			}
 			var elemV interface{}
-			if usectx {
+			if usectx || optionContains(options, "global") {
 				elemV = vmap.GetCtx(name)
 			} else {
 				elemV = vmap.Get(name)
@@ -413,6 +427,18 @@ func StringValueOf(v interface{}) (string, error) {
 	}
 }
 
+func StringsValueOf(v interface{}) ([]string, error) {
+	switch res := v.(type) {
+	case string:
+		return []string{res}, nil
+	case []string:
+		return res, nil
+
+	default:
+		return nil, fmt.Errorf("value is not []string:%v %v", v, reflect.TypeOf(v))
+	}
+}
+
 func isTrue(s string) bool {
 	switch s {
 	case "1", "true", "True", "t":
@@ -470,4 +496,13 @@ func parseByteSize(s string) (int, error) {
 	default:
 		return 0, fmt.Errorf("invalid byte size:%v", s)
 	}
+}
+
+func optionContains(opts string, opt string) bool {
+	for _, v := range strings.Split(opts, ",") {
+		if v == opt {
+			return true
+		}
+	}
+	return false
 }

@@ -87,6 +87,7 @@ func Test_parse(t *testing.T) {
 }
 
 type Config struct {
+	IPS    RangedString `json:"ips"`
 	Common struct {
 	} `json:"common"`
 	Server struct {
@@ -468,4 +469,20 @@ nae 5
 	//	fmt.Println(ft.Anonymous,ft.Name)
 	//}
 	fmt.Println(v)
+}
+
+func Test_ParseRange(t *testing.T) {
+	parseRangeIp2("172.21.157.[20-30][30-34")
+}
+
+func Test_cartesian(t *testing.T) {
+	fmt.Println(parseRangeIp2("172.21.[23,35,36]\\[:80"))
+}
+
+func Test_Cartesian(t *testing.T) {
+	fmt.Println(cartesianProduct([][]string{
+		{"1", "2"},
+		{"3", "4"},
+		{"5", "6", "7"},
+	}))
 }
