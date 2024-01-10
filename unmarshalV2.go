@@ -212,7 +212,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 		for i := 0; i < t.NumField(); i++ {
 			fieldT := t.Field(i)
 			jt := fieldT.Tag.Get("json")
-			name, options, _ := strings.Cut(jt, ",")
+			name, _, _ := strings.Cut(jt, ",")
 			if name == "" {
 				name = fieldT.Name
 			}
@@ -224,7 +224,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 				continue
 			}
 			var elemV interface{}
-			if usectx || optionContains(options, "global") {
+			if usectx || isTrue(fieldT.Tag.Get("global")) {
 				elemV = vmap.GetCtx(name)
 			} else {
 				elemV = vmap.Get(name)

@@ -108,7 +108,7 @@ type Config struct {
 }
 
 type Kgs struct {
-	Name string `json:"name"`
+	Name string `json:"name" global:"true"`
 	Age  int    `json:"age"`
 }
 

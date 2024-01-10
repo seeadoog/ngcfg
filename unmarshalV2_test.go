@@ -32,11 +32,15 @@ kvs {
 		c d
 	}
 }
-
+name 5
+age 8
 kgs {
 	- {
 		name fff
 		age 5
+	}
+	- {
+
 	}
 
 }
