@@ -54,6 +54,11 @@ var (
 	bytesSizeType = reflect.TypeOf(BinarySize(0))
 )
 
+func DecodeValue(dst any, from any) error {
+	v := reflect.ValueOf(dst)
+	return unmarshalObject2Struct("", from, v, false)
+}
+
 func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx bool) error {
 	if in == nil {
 		return nil

@@ -84,6 +84,13 @@ func (s *Options[O]) String() string {
 	return strings.Join(s.raw, " ")
 }
 
+func (s *Options[O]) MarshalJSON() ([]byte, error) {
+	if s == nil {
+		return nil, nil
+	}
+	return json.Marshal(s.opt)
+}
+
 type ValueTypes any
 
 type TagValue[T ValueTypes] struct {
