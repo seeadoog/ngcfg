@@ -1,6 +1,6 @@
 module github.com/seeadoog/ngcfg
 
-go 1.18
+go 1.20
 
 require github.com/seeadoog/linkedMap v0.1.0
 

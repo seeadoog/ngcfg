@@ -19,14 +19,14 @@ const (
 
 type scanner struct {
 	stack *list.List                     // 当前节点保存堆栈
-	tk    []byte                         // 当前token
+	tk    []rune                         // 当前token
 	ltks  []string                       // 当前行 所有token
-	step  func(s *scanner, c byte) error // 扫描step
+	step  func(s *scanner, c rune) error // 扫描step
 	cvt   int                            // 当前值类型
 	line  int                            // 扫描行
 	rank  int                            // 扫描列
-	preC  byte
-	nextC byte
+	preC  rune
+	nextC rune
 }
 
 // 重置行号
@@ -39,7 +39,7 @@ func parse(b []byte) (*Elem, error) {
 	b = append(b, '\n') // 结尾加一个\n
 	sc := &scanner{
 		stack: list.New(),
-		tk:    make([]byte, 0, 5),
+		tk:    make([]rune, 0, 5),
 		ltks:  make([]string, 0, 2),
 		step:  stepBegin,
 		cvt:   valueLine,
@@ -47,13 +47,15 @@ func parse(b []byte) (*Elem, error) {
 		rank:  0,
 	}
 	sc.stack.PushBack(NewElem())
-	for i, v := range b {
+
+	r := []rune(string(b))
+	for i, v := range r {
 		sc.rank++
 		if i > 0 {
-			sc.preC = b[i-1]
+			sc.preC = r[i-1]
 		}
-		if i+1 < len(b) {
-			sc.nextC = b[i+1]
+		if i+1 < len(r) {
+			sc.nextC = r[i+1]
 		}
 
 		if err := sc.step(sc, v); err != nil {
@@ -79,7 +81,7 @@ func stepObEnd(s *scanner) error {
 }
 
 // ssss
-func stepBegin(s *scanner, c byte) error {
+func stepBegin(s *scanner, c rune) error {
 	if isSpace(c) {
 		return nil
 	}
@@ -115,7 +117,7 @@ func stepBegin(s *scanner, c byte) error {
 	return nil
 }
 
-func stepEndOb(s *scanner, c byte) error {
+func stepEndOb(s *scanner, c rune) error {
 	if isSpace(c) {
 		return nil
 	}
@@ -132,7 +134,7 @@ func stepEndOb(s *scanner, c byte) error {
 	return fmt.Errorf("invalid  character '%s' after '}',line:%d : %d", string(c), s.line, s.rank)
 }
 
-func isSpace(c byte) bool {
+func isSpace(c rune) bool {
 	return c == ' ' || c == '\t'
 }
 
@@ -144,7 +146,7 @@ func appendLine(s *scanner) {
 }
 
 // weewr{#jjdsinvalid character '
-func stepContinue(s *scanner, c byte) error {
+func stepContinue(s *scanner, c rune) error {
 	switch c {
 	case '#':
 		if in(s.preC, ' ', 0, '\n', '\t', '\r') {
@@ -213,7 +215,7 @@ func stepContinue(s *scanner, c byte) error {
 }
 
 // " " 类型的string
-func stepInstring(s *scanner, c byte) error {
+func stepInstring(s *scanner, c rune) error {
 	if c == '\n' {
 		s.setLine()
 	}
@@ -233,7 +235,7 @@ func stepInstring(s *scanner, c byte) error {
 }
 
 // ' ' 类型的string
-func stepInstring2(s *scanner, c byte) error {
+func stepInstring2(s *scanner, c rune) error {
 	if c == '\n' {
 		s.setLine()
 	}
@@ -252,7 +254,7 @@ func stepInstring2(s *scanner, c byte) error {
 	return nil
 }
 
-func stepInstring3(s *scanner, c byte) error {
+func stepInstring3(s *scanner, c rune) error {
 	if c == '\n' {
 		s.setLine()
 	}
@@ -272,25 +274,25 @@ func stepInstring3(s *scanner, c byte) error {
 	return nil
 }
 
-func stepEcpNext(s *scanner, c byte) error {
+func stepEcpNext(s *scanner, c rune) error {
 	s.tk = append(s.tk, c)
 	s.step = stepInstring
 	return nil
 }
-func stepEcpNext2(s *scanner, c byte) error {
+func stepEcpNext2(s *scanner, c rune) error {
 	s.tk = append(s.tk, c)
 	s.step = stepInstring2
 	return nil
 }
 
-func stepEcpNext3(s *scanner, c byte) error {
+func stepEcpNext3(s *scanner, c rune) error {
 	s.tk = append(s.tk, c)
 	s.step = stepInstring3
 	return nil
 }
 
 // 忽略当前换行符，应对配置行过长的情况
-func stepEcpSep(s *scanner, c byte) error {
+func stepEcpSep(s *scanner, c rune) error {
 	if isSpace(c) {
 		return nil
 	}
@@ -313,7 +315,7 @@ func stepEcpSep(s *scanner, c byte) error {
 }
 
 // { ....\r\n
-func stepStartObject(s *scanner, c byte) error {
+func stepStartObject(s *scanner, c rune) error {
 	if isSpace(c) {
 		return nil
 	}
@@ -330,7 +332,7 @@ func stepStartObject(s *scanner, c byte) error {
 	return fmt.Errorf("invalid character '%s' after '{' in start object block ,at:line %d :%d", string(c), s.line, s.rank)
 }
 
-func stepAnno(s *scanner, c byte) error {
+func stepAnno(s *scanner, c rune) error {
 	if c == '\r' {
 		s.step = stepEscap1
 	} else if c == '\n' {
@@ -340,7 +342,7 @@ func stepAnno(s *scanner, c byte) error {
 }
 
 // \r
-func stepEscap1(s *scanner, c byte) error {
+func stepEscap1(s *scanner, c rune) error {
 	if c == '\n' {
 		return stepEscap2(s)
 	} else {

@@ -1,6 +1,7 @@
 package ngcfg
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,6 +39,8 @@ type Unmarshaller interface {
 
 var (
 	unmarshalType = reflect.TypeOf(new(Unmarshaller)).Elem()
+
+	jsonUnmarshalType = reflect.TypeOf(new(json.Unmarshaler)).Elem()
 
 	customTagValidator = map[string]func(path string, v interface{}, tagV string) error{}
 )
@@ -92,6 +95,37 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 			fallthrough
 		default:
 			err := v.Interface().(Unmarshaller).UnmarshalCfg(path, in)
+			if err != nil {
+				return fmt.Errorf("'%s' %w", path, err)
+			}
+			return nil
+		}
+	}
+
+	if v.Type().Implements(jsonUnmarshalType) {
+		switch v.Kind() {
+		case reflect.Ptr:
+			if v.IsNil() {
+				elemType := v.Type().Elem()
+				newV := reflect.New(elemType)
+				jbs, err := toJsonRaw(in)
+				if err != nil {
+					return fmt.Errorf("%s tojson err:%v", path, err)
+				}
+				err = (newV.Interface().(json.Unmarshaler)).UnmarshalJSON(jbs)
+				if err != nil {
+					return fmt.Errorf("'%s' %w", path, err)
+				}
+				v.Set(newV)
+				return nil
+			}
+			fallthrough
+		default:
+			jbs, err := toJsonRaw(in)
+			if err != nil {
+				return fmt.Errorf("%s tojson err:%v", path, err)
+			}
+			err = v.Interface().(json.Unmarshaler).UnmarshalJSON(jbs)
 			if err != nil {
 				return fmt.Errorf("'%s' %w", path, err)
 			}
@@ -319,7 +353,7 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 
 		intV, err := intValueOf(in)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", path, err)
 		}
 		v.SetInt(intV)
 		return nil
@@ -333,14 +367,14 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 	case reflect.Uint, reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8:
 		intV, err := intValueOf(in)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", path, err)
 		}
 		v.SetUint(uint64(intV))
 		return nil
 	case reflect.Float64, reflect.Float32:
 		floatV, err := floatValueOf(in)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", path, err)
 		}
 		v.SetFloat(floatV)
 		return nil
@@ -510,4 +544,45 @@ func optionContains(opts string, opt string) bool {
 		}
 	}
 	return false
+}
+
+func toJsonRaw(in any) ([]byte, error) {
+	switch v := in.(type) {
+	case []string:
+		bs, _ := json.Marshal(strings.Join(v, " "))
+		return bs, nil
+
+	case nil:
+		return []byte("null"), nil
+	case *Elem:
+		bs := make([]byte, 0)
+		bs = append(bs, '{')
+		var err error
+		hasElem := false
+		v.Range(func(key string, val interface{}) bool {
+			kb, _ := json.Marshal(key)
+			var vb []byte
+			vb, err = toJsonRaw(val)
+			if err != nil {
+				return false
+			}
+			bs = append(bs, kb...)
+			bs = append(bs, ':')
+			bs = append(bs, vb...)
+			bs = append(bs, ',')
+			hasElem = true
+			return true
+		})
+		if err != nil {
+			return nil, err
+		}
+		if hasElem {
+			bs = bs[:len(bs)-1]
+		}
+		bs = append(bs, '}')
+		return bs, nil
+	default:
+		return nil, fmt.Errorf("invalid type %v, cannot marshal to json Byte", reflect.TypeOf(in))
+
+	}
 }

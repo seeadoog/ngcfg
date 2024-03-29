@@ -26,6 +26,14 @@ func UnmarshalFromBytes(data []byte, v interface{}) error {
 	return UnmarshalFromElem(e, v)
 }
 
+func UnmarshalFromString(data string, v interface{}) error {
+	e, err := Parse([]byte(data))
+	if err != nil {
+		return err
+	}
+	return UnmarshalFromElem(e, v)
+}
+
 func UnmarshalCtx(e *Elem, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
