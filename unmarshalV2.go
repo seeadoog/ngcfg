@@ -294,7 +294,13 @@ func unmarshalObject2Struct(path string, in interface{}, v reflect.Value, usectx
 				if isTrue(fieldT.Tag.Get("required")) {
 					return fmt.Errorf("miss field ,'%s' is required", path+"."+name)
 				}
-				continue
+				if fieldT.Type.Kind() == reflect.Struct {
+					elemV = NewElem()
+				} else {
+					continue
+
+				}
+
 			}
 
 			for key, f := range customTagValidator {
